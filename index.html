@@ -13,9 +13,45 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
   </head>
-  <body>
+  <body style="background-color: #0f172a; color: #f8fafc; margin: 0;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function () {
+        var devScript = document.querySelector('script[src="/src/main.tsx"]');
+        if (!devScript) return;
+        var handled = false;
+        function showHelp(root) {
+          root.innerHTML =
+            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;text-align:center;">' +
+            '<div style="max-width:460px;background:#1e293b;border:2px solid #f59e0b;border-radius:16px;padding:24px;color:#f8fafc;">' +
+            '<h1 style="margin:0 0 8px;font-size:20px;color:#fcd34d;">Aplikasi Perlu Dibina (Build)</h1>' +
+            '<p style="margin:0;font-size:14px;line-height:1.6;color:#cbd5e1;">Di GitHub, buka <b>Settings &rarr; Pages &rarr; Source</b> dan pilih <b>GitHub Actions</b> (atau folder <b>/docs</b> pada branch <b>main</b>).</p>' +
+            '</div></div>';
+        }
+        function handleRawStaticFallback() {
+          if (handled) return;
+          var root = document.getElementById('root');
+          if (!root || root.hasChildNodes()) return;
+          handled = true;
+          fetch('./docs/index.html', { method: 'HEAD' })
+            .then(function (res) {
+              if (res.ok) {
+                window.location.replace('./docs/');
+              } else {
+                showHelp(root);
+              }
+            })
+            .catch(function () {
+              showHelp(root);
+            });
+        }
+        devScript.addEventListener('error', handleRawStaticFallback);
+        if (window.location.hostname.endsWith('github.io')) {
+          window.setTimeout(handleRawStaticFallback, 2000);
+        }
+      })();
+    </script>
   </body>
 </html>
 
