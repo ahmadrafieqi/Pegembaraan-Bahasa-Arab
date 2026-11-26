@@ -1,0 +1,3469 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kembara Bahasa Arab: Kerajaan Yang Hilang | رِحْلَةُ اللُّغَةِ الْعَرَبِيَّةِ</title>
+    <!-- Tailwind CSS untuk reka bentuk responsif dan moden -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js r128 untuk paparan dunia 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Fon Google: Fredoka untuk teks mesra kanak-kanak & Cairo/Amiri untuk tulisan Arab berbaris penuh -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Fredoka', sans-serif;
+            background-color: #0f172a;
+        }
+        .arabic-text {
+            font-family: 'Cairo', 'Amiri', serif;
+            direction: rtl;
+            line-height: 1.95;
+            padding-top: 0.08em;
+            padding-bottom: 0.08em;
+            max-width: 100%;
+            overflow-wrap: break-word;
+        }
+        .arabic-display {
+            font-family: 'Amiri', 'Cairo', serif;
+            direction: rtl;
+            line-height: 2.0;
+            padding-top: 0.1em;
+            padding-bottom: 0.1em;
+            max-width: 100%;
+            overflow-wrap: break-word;
+        }
+
+        #game-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 1;
+            touch-action: none;
+        }
+
+        .btn-quest {
+            transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.28);
+        }
+        .btn-quest:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 0 rgba(0, 0, 0, 0.28);
+        }
+        .btn-quest:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.28);
+        }
+        .btn-quest:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .quest-panel {
+            background: rgba(255, 252, 245, 0.96);
+            border: 4px solid #f59e0b;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.45), inset 0 2px 0 rgba(255,255,255,0.9);
+        }
+
+        .hud-pill {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(251, 191, 36, 0.55);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.85) translateY(15px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-pop {
+            animation: popIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+            50% { box-shadow: 0 0 0 12px rgba(251, 191, 36, 0); }
+        }
+        .pulse-gold {
+            animation: pulseGlow 2s infinite;
+        }
+
+        #touch-look-zone {
+            touch-action: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fef3c7;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Kanvas Dunia 3D -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- =========================================================
+         1. MENU UTAMA
+    ========================================================== -->
+    <div id="screen-menu" class="fixed inset-0 z-30 flex items-center justify-center p-3 sm:p-4 bg-gradient-to-b from-indigo-950/60 via-slate-900/45 to-amber-950/65 backdrop-blur-[2px] overflow-y-auto">
+        <div class="quest-panel max-w-2xl w-full rounded-3xl p-5 sm:p-10 text-center animate-pop relative overflow-hidden my-auto">
+            <div class="absolute -top-6 -left-6 w-24 h-24 bg-amber-300/30 rounded-full blur-xl"></div>
+            <div class="absolute -bottom-6 -right-6 w-28 h-28 bg-emerald-300/30 rounded-full blur-xl"></div>
+
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100 border-2 border-amber-400 text-amber-800 text-xs sm:text-sm font-bold mb-3">
+                <span>✨ KEMBARA BAHASA ARAB TAHUN 4 • EDISI 3D REALISTIK</span>
+                <span>•</span>
+                <span class="arabic-text">الِاسْمُ وَالْفِعْلُ</span>
+            </div>
+
+            <h1 class="text-2xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-1 drop-shadow-sm">
+                KEMBARA BAHASA ARAB
+            </h1>
+            <h2 class="text-lg sm:text-2xl font-bold text-amber-600 tracking-wide mb-2">
+                KERAJAAN YANG HILANG
+            </h2>
+            <div class="arabic-display text-xl sm:text-3xl font-bold text-emerald-700 mb-4 sm:mb-5 bg-emerald-50/90 py-2 px-5 rounded-2xl inline-block border-2 border-emerald-200 max-w-full">
+                رِحْلَةُ اللُّغَةِ الْعَرَبِيَّةِ
+            </div>
+
+            <p class="text-slate-600 text-xs sm:text-base max-w-lg mx-auto mb-6 leading-relaxed">
+                Terokai Kerajaan Arab 3D yang lebih realistik, temui para ilmuwan bijaksana, kumpulkan skrol hikmah, dan kuasai rahsia <strong class="text-blue-600">Isim (<span class="arabic-text">الِاسْمُ</span>)</strong> serta <strong class="text-rose-600">Fi‘il (<span class="arabic-text">الْفِعْلُ</span>)</strong>!
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+                <button onclick="openCharacterSelect()" class="btn-quest w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 font-extrabold text-base sm:text-xl border-2 border-amber-300 flex items-center justify-center gap-3 pulse-gold">
+                    <span>⚔️</span>
+                    <span>MULA KEMBARA</span>
+                </button>
+                <button onclick="toggleHowToPlay(true)" class="btn-quest w-full sm:w-auto px-6 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-b from-sky-400 to-sky-500 text-white font-bold text-sm sm:text-lg border-2 border-sky-300 flex items-center justify-center gap-2">
+                    <span>📖</span>
+                    <span>CARA BERMAIN</span>
+                </button>
+            </div>
+
+            <div class="mt-6 pt-4 border-t-2 border-amber-200/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-3 flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xl shrink-0">📘</div>
+                    <div>
+                        <div class="font-bold text-blue-900 text-sm">Isim <span class="arabic-text text-base text-blue-700">(الِاسْمُ)</span> — Kata Nama</div>
+                        <div class="text-xs text-blue-700">Nama bagi manusia, tempat, haiwan, atau benda (cth: <span class="arabic-text font-bold">كِتَابٌ</span>).</div>
+                    </div>
+                </div>
+                <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3 flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold text-xl shrink-0">⚡</div>
+                    <div>
+                        <div class="font-bold text-rose-900 text-sm">Fi‘il <span class="arabic-text text-base text-rose-700">(الْفِعْلُ)</span> — Kata Kerja</div>
+                        <div class="text-xs text-rose-700">Perkataan yang menunjukkan perbuatan atau tindakan (cth: <span class="arabic-text font-bold">يَكْتُبُ</span>).</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL CARA BERMAIN
+    ========================================================== -->
+    <div id="modal-howto" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+        <div class="quest-panel max-w-xl w-full rounded-3xl p-5 sm:p-8 animate-pop max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+                    <span>🎮</span> Kawalan & Peraturan Permainan
+                </h3>
+                <button onclick="toggleHowToPlay(false)" class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 font-bold hover:bg-rose-200">✕</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5 text-sm">
+                <div class="bg-amber-50 p-3 rounded-2xl border-2 border-amber-200">
+                    <span class="font-bold text-amber-800 block mb-1">🏃 Gerakkan Watak</span>
+                    <span class="text-slate-700"><kbd class="px-2 py-0.5 bg-white border rounded font-bold">W A S D</kbd>, Anak Panah, atau Pad Sentuh</span>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-2xl border-2 border-amber-200">
+                    <span class="font-bold text-amber-800 block mb-1">🦘 Melompat</span>
+                    <span class="text-slate-700"><kbd class="px-2 py-0.5 bg-white border rounded font-bold">SPACEBAR</kbd> atau Butang <strong>LOMPAT</strong></span>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-2xl border-2 border-amber-200">
+                    <span class="font-bold text-amber-800 block mb-1">💬 Berbual / Periksa</span>
+                    <span class="text-slate-700"><kbd class="px-2 py-0.5 bg-white border rounded font-bold">E</kbd>, Klik Objek 3D, atau Butang <strong>INTERAKSI</strong></span>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-2xl border-2 border-amber-200">
+                    <span class="font-bold text-amber-800 block mb-1">🎥 Kamera & Mod FPP/TPP</span>
+                    <span class="text-slate-700">Seret Tetikus/Skrin • Kekunci <kbd class="px-2 py-0.5 bg-white border rounded font-bold">V</kbd> tukar FPP/TPP</span>
+                </div>
+            </div>
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 text-xs sm:text-sm text-emerald-900 mb-6 space-y-1.5">
+                <p class="font-bold">🗺️ Misi 4 Peringkat Kerajaan & Peraturan Markah:</p>
+                <p>1. <strong>Kampung Permulaan:</strong> Cari 5 objek Arab & kenal pasti Isim atau Fi‘il.</p>
+                <p>2. <strong>Hutan Ajaib:</strong> Kumpul 5 kad tersembunyi & asingkan ke peti Isim & Fi‘il.</p>
+                <p>3. <strong>Istana Misteri:</strong> Selesaikan 5 teka-teki ayat Arab sebagai Detektif Ayat.</p>
+                <p>4. <strong>Raja Terakhir:</strong> Tewaskan Penjaga Ilmu dalam pertarungan 10 soalan!</p>
+                <p class="pt-1.5 border-t border-emerald-200 font-bold text-rose-800">⚠️ Peraturan: Setiap soalan hanya boleh dijawab 1 kali (salah = 0 mata & tidak boleh diulang). Lulus sekurang-kurangnya 2/5 betul untuk ke peringkat seterusnya!</p>
+            </div>
+            <button onclick="toggleHowToPlay(false)" class="btn-quest w-full py-3.5 rounded-2xl bg-amber-400 text-slate-950 font-extrabold text-lg">
+                FAHAM!
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         2. SKRIN PEMILIHAN WATAK, MOD KAMERA & 4 MOD PERANTI
+    ========================================================== -->
+    <div id="screen-charselect" class="hidden fixed inset-0 z-30 flex items-center justify-center p-3 sm:p-4 bg-slate-950/65 backdrop-blur-sm">
+        <div class="quest-panel max-w-3xl w-full rounded-3xl p-5 sm:p-8 animate-pop max-h-[95vh] overflow-y-auto">
+            <div class="text-center mb-4">
+                <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-bold text-xs uppercase tracking-wider">Langkah 1: Persediaan Watak 3D</span>
+                <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 mt-1">Pilih Watak, Kamera & Mod Peranti</h2>
+                <p class="text-slate-600 text-xs sm:text-sm">Pilih watak 3D Lelaki (Baju Melayu/Kopiah Biru) atau Perempuan, sudut kamera, dan aturan peranti anda!</p>
+            </div>
+
+            <div id="hero-grid" class="grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto mb-4"></div>
+
+            <div class="bg-sky-50 border-2 border-sky-300 rounded-2xl p-3 sm:p-3.5 mb-4">
+                <div class="font-bold text-sky-950 text-xs sm:text-sm mb-2 flex items-center gap-2">
+                    <span>🎥</span>
+                    <span>Pilih Mod Pandangan Kamera (Boleh ditukar semasa bermain):</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" id="btn-mode-tpp" onclick="selectCameraMode('TPP')"
+                        class="p-2.5 sm:p-3 rounded-xl border-4 border-amber-500 bg-amber-100 text-left transition flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl shrink-0">🧍</span>
+                        <div class="min-w-0">
+                            <div class="font-extrabold text-slate-900 text-xs sm:text-sm leading-tight">Mod TPP (Orang Ketiga)</div>
+                            <div class="text-[10px] sm:text-[11px] text-slate-600 leading-tight mt-0.5">Kamera di belakang watak</div>
+                        </div>
+                    </button>
+                    <button type="button" id="btn-mode-fpp" onclick="selectCameraMode('FPP')"
+                        class="p-2.5 sm:p-3 rounded-xl border-2 border-slate-300 bg-white text-left transition flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl shrink-0">👁️</span>
+                        <div class="min-w-0">
+                            <div class="font-extrabold text-slate-900 text-xs sm:text-sm leading-tight">Mod FPP (Orang Pertama)</div>
+                            <div class="text-[10px] sm:text-[11px] text-slate-600 leading-tight mt-0.5">Lihat dari mata watak</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3 sm:p-3.5 mb-5">
+                <div class="font-bold text-amber-950 text-xs sm:text-sm mb-2 flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-1.5"><span>📲</span><span>Pilih Mod Peranti Anda (Aturan Kawalan & Paparan):</span></span>
+                    <span id="device-auto-tag" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold">Auto-Kesan</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button type="button" id="btn-dev-telefon" onclick="selectDeviceMode('TELEFON')"
+                        class="p-2.5 rounded-xl border-2 border-slate-300 bg-white text-center transition flex flex-col items-center justify-center">
+                        <span class="text-xl sm:text-2xl mb-0.5">📱</span>
+                        <div class="font-extrabold text-slate-900 text-xs leading-tight">Telefon</div>
+                        <div class="text-[10px] text-slate-600 leading-tight mt-0.5">Pad Sentuh Padat</div>
+                    </button>
+                    <button type="button" id="btn-dev-tablet" onclick="selectDeviceMode('TABLET')"
+                        class="p-2.5 rounded-xl border-2 border-slate-300 bg-white text-center transition flex flex-col items-center justify-center">
+                        <span class="text-xl sm:text-2xl mb-0.5">📟</span>
+                        <div class="font-extrabold text-slate-900 text-xs leading-tight">Tablet</div>
+                        <div class="text-[10px] text-slate-600 leading-tight mt-0.5">Sentuhan Skrin Luas</div>
+                    </button>
+                    <button type="button" id="btn-dev-laptop" onclick="selectDeviceMode('LAPTOP')"
+                        class="p-2.5 rounded-xl border-2 border-slate-300 bg-white text-center transition flex flex-col items-center justify-center">
+                        <span class="text-xl sm:text-2xl mb-0.5">💻</span>
+                        <div class="font-extrabold text-slate-900 text-xs leading-tight">Laptop</div>
+                        <div class="text-[10px] text-slate-600 leading-tight mt-0.5">Kekunci + Pad Sesentuh</div>
+                    </button>
+                    <button type="button" id="btn-dev-pc" onclick="selectDeviceMode('PC')"
+                        class="p-2.5 rounded-xl border-2 border-slate-300 bg-white text-center transition flex flex-col items-center justify-center">
+                        <span class="text-xl sm:text-2xl mb-0.5">🖥️</span>
+                        <div class="font-extrabold text-slate-900 text-xs leading-tight">PC</div>
+                        <div class="text-[10px] text-slate-600 leading-tight mt-0.5">Papan Kekunci + Tetikus</div>
+                    </button>
+                </div>
+                <p id="device-mode-summary" class="text-[11px] text-amber-900 font-semibold mt-2 text-center bg-white/80 rounded-xl py-1.5 px-3 border border-amber-200">
+                    Mod PC: Paparan penuh tanpa butang sentuh skrin, kawalan WASD + Tetikus.
+                </p>
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+                <button onclick="backToMenu()" class="btn-quest px-5 py-3.5 rounded-2xl bg-slate-200 text-slate-800 font-bold text-sm sm:text-base">
+                    ← Kembali
+                </button>
+                <button onclick="startGameWorld()" class="btn-quest flex-1 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-b from-emerald-400 to-emerald-600 text-white font-extrabold text-base sm:text-xl border-2 border-emerald-300">
+                    MASUK KE KERAJAAN 🚀
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         3. PAPARAN HUD PERMAINAN
+    ========================================================== -->
+    <div id="hud-overlay" class="hidden fixed inset-0 z-20 pointer-events-none flex flex-col justify-between p-2.5 sm:p-4">
+        <div class="flex items-start justify-between gap-2">
+            <!-- Profil & Lencana -->
+            <div class="hud-pill rounded-2xl p-2 sm:p-2.5 text-white pointer-events-auto flex flex-col gap-1.5 max-w-[205px] sm:max-w-[245px]">
+                <div class="flex items-center gap-2">
+                    <div id="hud-avatar" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center text-lg sm:text-xl font-bold border-2 border-white shrink-0">
+                        👦
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div id="hud-player-name" class="font-extrabold text-[11px] sm:text-xs leading-relaxed text-amber-300 break-words">Lelaki (وَلَدٌ)</div>
+                        <div class="flex items-center gap-2 text-[11px] sm:text-xs font-bold mt-0.5">
+                            <span class="text-yellow-300">⭐ <span id="hud-stars">0</span>/12</span>
+                            <span class="text-emerald-300">💎 <span id="hud-score">0</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div id="hud-badges" class="flex items-center gap-1 pt-1 border-t border-white/15 text-[11px] sm:text-xs">
+                    <span class="text-slate-300 font-semibold">Lencana:</span>
+                    <span id="badge-slot-1" title="Lencana Pemburu Perkataan" class="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center opacity-40">🏺</span>
+                    <span id="badge-slot-2" title="Lencana Penyusun Ajaib" class="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center opacity-40">🍄</span>
+                    <span id="badge-slot-3" title="Lencana Detektif Ayat" class="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center opacity-40">🏰</span>
+                    <span id="badge-slot-4" title="Lencana Juara Kerajaan" class="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center opacity-40">👑</span>
+                </div>
+            </div>
+
+            <!-- Bar Kemajuan Tahap & Misi Semasa (Desktop) -->
+            <div class="hidden lg:flex flex-col items-center gap-2 pointer-events-auto max-w-lg w-full">
+                <div class="hud-pill rounded-full px-4 py-2 flex items-center gap-2 text-xs font-bold text-white">
+                    <div id="timeline-1" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500 text-slate-950">
+                        <span>1. Kampung</span>
+                    </div>
+                    <span class="text-amber-400">➔</span>
+                    <div id="timeline-2" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">
+                        <span>🔒 2. Hutan</span>
+                    </div>
+                    <span class="text-slate-500">➔</span>
+                    <div id="timeline-3" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">
+                        <span>🔒 3. Istana</span>
+                    </div>
+                    <span class="text-slate-500">➔</span>
+                    <div id="timeline-4" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">
+                        <span>🔒 4. Raja</span>
+                    </div>
+                </div>
+
+                <div class="hud-pill rounded-2xl px-4 py-2.5 text-white w-full flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold" id="hud-mission-title">
+                            TAHAP 1: PEMBURU PERKATAAN
+                        </div>
+                        <div class="text-xs sm:text-sm font-semibold text-slate-100" id="hud-mission-desc">
+                            Berbual dengan Ustaz Hakim atau cari 5 objek Arab di kampung!
+                        </div>
+                    </div>
+                    <div id="hud-mission-counter" class="px-3 py-1 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-sm shrink-0">
+                        0 / 5
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kawalan Kanan Atas & Minimap -->
+            <div class="flex flex-col items-end gap-2 pointer-events-auto">
+                <div class="flex flex-wrap justify-end items-center gap-1.5">
+                    <button onclick="cycleDeviceMode()" id="btn-device-mode" title="Tukar Mod Peranti (Telefon / Tablet / Laptop / PC)" class="btn-quest px-2.5 py-2 rounded-xl bg-indigo-600 text-white font-extrabold text-[11px] sm:text-xs flex items-center gap-1 border border-indigo-300">
+                        <span id="dev-mode-icon">🖥️</span>
+                        <span id="dev-mode-label">PC</span>
+                    </button>
+                    <button onclick="toggleCameraPerspective()" id="btn-cam-mode" title="Tukar Mod Kamera FPP / TPP (Kekunci V)" class="btn-quest px-2.5 py-2 rounded-xl bg-sky-500 text-white font-extrabold text-[11px] sm:text-xs flex items-center gap-1 border border-sky-300">
+                        <span id="cam-mode-icon">🧍</span>
+                        <span id="cam-mode-label">TPP</span>
+                    </button>
+                    <button onclick="openWorldMap()" title="Peta Dunia (M)" class="btn-quest px-2.5 py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-[11px] sm:text-xs flex items-center gap-1">
+                        <span>🗺️</span>
+                        <span class="hidden sm:inline">Peta</span>
+                    </button>
+                    <button onclick="openMagicSorterIfReady()" id="btn-hud-sorter" class="hidden btn-quest px-2.5 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-[11px] sm:text-xs animate-bounce">
+                        <span>✨ Susun Kad!</span>
+                    </button>
+                    <button onclick="toggleMute()" id="btn-mute" title="Bunyi" class="btn-quest w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 text-white border border-slate-600 flex items-center justify-center text-sm sm:text-base">
+                        🔊
+                    </button>
+                    <button onclick="openRestartConfirm()" title="Mula Semula" class="btn-quest w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-600 text-white border border-rose-400 flex items-center justify-center text-xs sm:text-sm font-bold">
+                        ↻
+                    </button>
+                </div>
+
+                <div onclick="openWorldMap()" class="relative rounded-2xl overflow-hidden border-2 border-amber-400 shadow-lg cursor-pointer group" title="Klik untuk buka Peta Dunia">
+                    <canvas id="minimap-canvas" width="116" height="116" class="block bg-slate-900/90 sm:w-[130px] sm:h-[130px]"></canvas>
+                    <div class="absolute bottom-1 left-1.5 right-1.5 flex justify-between items-center text-[10px] font-bold text-amber-200 pointer-events-none">
+                        <span id="minimap-zone-label">Kampung</span>
+                        <span>[M]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bar Misi Mudah Alih -->
+        <div class="lg:hidden hud-pill rounded-xl px-3 py-2 text-white pointer-events-auto flex items-center justify-between gap-2 mt-1">
+            <div class="truncate">
+                <span class="text-[10px] font-bold text-amber-300 block" id="hud-mission-title-mobile">TAHAP 1: PEMBURU PERKATAAN</span>
+                <span class="text-xs font-medium" id="hud-mission-desc-mobile">Cari 5 objek Arab di kampung!</span>
+            </div>
+            <span id="hud-mission-counter-mobile" class="px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 font-extrabold text-xs shrink-0">0/5</span>
+        </div>
+
+        <!-- Bahagian Bawah: Petunjuk Interaksi & Kawalan Sentuh -->
+        <div class="flex flex-col items-center gap-2 mt-auto">
+            <div id="interact-prompt" class="hidden pointer-events-auto animate-bounce z-30">
+                <button onclick="triggerInteraction()" class="px-5 py-2.5 sm:px-6 sm:py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-slate-950 font-extrabold text-sm sm:text-lg border-2 border-white shadow-xl flex items-center gap-2.5">
+                    <span class="px-2 py-0.5 rounded-lg bg-slate-900 text-amber-300 text-xs sm:text-sm">E</span>
+                    <span id="interact-prompt-text">Berbual dengan Ustaz Hakim</span>
+                </button>
+            </div>
+
+            <div id="touch-controls-container" class="hidden w-full items-end justify-between pointer-events-auto px-1 pb-1 gap-2">
+                <!-- Pad Arah (D-Pad) -->
+                <div id="touch-dpad-box" class="grid grid-cols-3 gap-1.5 w-32 h-32 sm:w-40 sm:h-40 shrink-0">
+                    <div></div>
+                    <button ontouchstart="setTouchKey('KeyW', true)" ontouchend="setTouchKey('KeyW', false)" ontouchcancel="setTouchKey('KeyW', false)" onmousedown="setTouchKey('KeyW', true)" onmouseup="setTouchKey('KeyW', false)" onmouseleave="setTouchKey('KeyW', false)" class="bg-slate-900/80 active:bg-amber-400 active:text-slate-950 text-white rounded-2xl border-2 border-white/30 font-bold text-base sm:text-lg shadow-md">▲</button>
+                    <div></div>
+                    <button ontouchstart="setTouchKey('KeyA', true)" ontouchend="setTouchKey('KeyA', false)" ontouchcancel="setTouchKey('KeyA', false)" onmousedown="setTouchKey('KeyA', true)" onmouseup="setTouchKey('KeyA', false)" onmouseleave="setTouchKey('KeyA', false)" class="bg-slate-900/80 active:bg-amber-400 active:text-slate-950 text-white rounded-2xl border-2 border-white/30 font-bold text-base sm:text-lg shadow-md">◀</button>
+                    <div class="bg-slate-900/35 rounded-2xl flex items-center justify-center text-[9px] sm:text-[10px] text-white/60 font-bold">GERAK</div>
+                    <button ontouchstart="setTouchKey('KeyD', true)" ontouchend="setTouchKey('KeyD', false)" ontouchcancel="setTouchKey('KeyD', false)" onmousedown="setTouchKey('KeyD', true)" onmouseup="setTouchKey('KeyD', false)" onmouseleave="setTouchKey('KeyD', false)" class="bg-slate-900/80 active:bg-amber-400 active:text-slate-950 text-white rounded-2xl border-2 border-white/30 font-bold text-base sm:text-lg shadow-md">▶</button>
+                    <div></div>
+                    <button ontouchstart="setTouchKey('KeyS', true)" ontouchend="setTouchKey('KeyS', false)" ontouchcancel="setTouchKey('KeyS', false)" onmousedown="setTouchKey('KeyS', true)" onmouseup="setTouchKey('KeyS', false)" onmouseleave="setTouchKey('KeyS', false)" class="bg-slate-900/80 active:bg-amber-400 active:text-slate-950 text-white rounded-2xl border-2 border-white/30 font-bold text-base sm:text-lg shadow-md">▼</button>
+                    <div></div>
+                </div>
+
+                <!-- Zon Seret Kamera Sentuh -->
+                <div id="touch-look-zone" class="flex-1 h-24 sm:h-32 rounded-2xl bg-slate-950/35 border-2 border-dashed border-white/25 flex items-center justify-center text-center px-2">
+                    <span class="text-[10px] sm:text-xs font-bold text-white/75 pointer-events-none">👆 Seret di sini untuk pusing kamera</span>
+                </div>
+
+                <!-- Butang Aksi Kanan (Lompat & Interaksi) -->
+                <div class="flex flex-col gap-2 shrink-0">
+                    <button onclick="triggerInteraction()" class="w-20 h-14 sm:w-24 sm:h-16 rounded-2xl bg-amber-400 active:bg-amber-300 text-slate-950 font-extrabold text-xs sm:text-sm border-2 border-white shadow-lg flex flex-col items-center justify-center">
+                        <span>💬</span>
+                        <span>INTERAKSI</span>
+                    </button>
+                    <button ontouchstart="triggerJump()" onmousedown="triggerJump()" class="w-20 h-14 sm:w-24 sm:h-16 rounded-2xl bg-emerald-500 active:bg-emerald-400 text-white font-extrabold text-xs sm:text-sm border-2 border-white shadow-lg flex flex-col items-center justify-center">
+                        <span>🦘</span>
+                        <span>LOMPAT</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         4. MODAL DIALOG NPC
+    ========================================================== -->
+    <div id="modal-dialogue" class="hidden fixed inset-0 z-40 flex items-end sm:items-center justify-center p-3 sm:p-6 bg-slate-950/65 backdrop-blur-sm">
+        <div class="quest-panel max-w-2xl w-full rounded-3xl p-5 sm:p-7 animate-pop">
+            <div class="flex items-start gap-3 sm:gap-4 mb-4">
+                <div id="dlg-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-3xl sm:text-4xl shrink-0">
+                    👳‍♂️
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 id="dlg-name" class="text-lg sm:text-2xl font-extrabold text-slate-900">Ustaz Hakim</h3>
+                        <span id="dlg-arabic-title" class="arabic-text px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-bold">الْأُسْتَاذُ حَكِيمٌ</span>
+                    </div>
+                    <p id="dlg-role" class="text-xs font-bold text-amber-700 uppercase tracking-wider">Penjaga Kampung Permulaan</p>
+                </div>
+            </div>
+            <div id="dlg-body" class="bg-amber-50/90 border-2 border-amber-200 rounded-2xl p-4 text-slate-800 text-sm sm:text-base leading-relaxed mb-5 space-y-2"></div>
+            <div id="dlg-actions" class="flex flex-wrap items-center justify-end gap-2.5"></div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         5. MODAL KUIZ (TAHAP 1, TAHAP 3 & PERTARUNGAN RAJA TAHAP 4)
+    ========================================================== -->
+    <div id="modal-quiz" class="hidden fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-sm">
+        <div class="quest-panel max-w-xl w-full rounded-3xl p-5 sm:p-7 animate-pop max-h-[94vh] overflow-y-auto">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <span id="quiz-badge" class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-xs uppercase">TAHAP 1 • OBJEK ARAB</span>
+                <span id="quiz-progress-text" class="text-xs font-extrabold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Soalan 1 / 5</span>
+            </div>
+
+            <!-- Bar Nyawa Raja (Hanya untuk Tahap 4) -->
+            <div id="boss-hp-container" class="hidden mb-4 bg-rose-50 border-2 border-rose-300 rounded-2xl p-3">
+                <div class="flex justify-between items-center text-xs font-extrabold text-rose-900 mb-1">
+                    <span>👑 PENJAGA ILMU (SULTAN HARUN)</span>
+                    <span id="boss-hp-text">Nyawa: 10 / 10</span>
+                </div>
+                <div class="w-full h-3.5 bg-rose-200 rounded-full overflow-hidden border border-rose-400">
+                    <div id="boss-hp-bar" class="h-full bg-gradient-to-r from-rose-600 to-amber-500 transition-all duration-300" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-b from-slate-900 to-slate-800 text-white rounded-2xl p-5 text-center mb-4 border-2 border-amber-400 shadow-inner">
+                <div id="quiz-context" class="text-xs text-amber-300 font-bold mb-2">Perhatikan perkataan Arab di bawah:</div>
+                <div id="quiz-arabic-word" class="arabic-display text-3xl sm:text-5xl font-bold text-white mb-2">كِتَابٌ</div>
+                <div id="quiz-translit" class="text-xs sm:text-sm text-sky-300 font-semibold">(Kitābun — Buku)</div>
+            </div>
+
+            <p id="quiz-question-text" class="text-slate-800 font-bold text-sm sm:text-base text-center mb-4">
+                Adakah perkataan ini tergolong dalam <span class="text-blue-600">Isim (Kata Nama)</span> atau <span class="text-rose-600">Fi‘il (Kata Kerja)</span>?
+            </p>
+
+            <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <button id="btn-ans-isim" onclick="submitQuizAnswer('ISIM')" class="btn-quest p-4 rounded-2xl bg-gradient-to-b from-blue-500 to-blue-600 text-white font-extrabold border-2 border-blue-300 flex flex-col items-center justify-center gap-1">
+                    <span class="text-2xl">📘</span>
+                    <span class="text-base sm:text-lg">ISIM <span class="arabic-text">(الِاسْمُ)</span></span>
+                    <span class="text-[11px] font-medium text-blue-100">Kata Nama (Benda / Orang / Tempat)</span>
+                </button>
+                <button id="btn-ans-fiil" onclick="submitQuizAnswer('FIIL')" class="btn-quest p-4 rounded-2xl bg-gradient-to-b from-rose-500 to-rose-600 text-white font-extrabold border-2 border-rose-300 flex flex-col items-center justify-center gap-1">
+                    <span class="text-2xl">⚡</span>
+                    <span class="text-base sm:text-lg">FI‘IL <span class="arabic-text">(الْفِعْلُ)</span></span>
+                    <span class="text-[11px] font-medium text-rose-100">Kata Kerja (Perbuatan / Aksi)</span>
+                </button>
+            </div>
+
+            <div id="quiz-feedback" class="hidden rounded-2xl p-4 text-sm mb-4 border-2"></div>
+
+            <button id="btn-quiz-next" onclick="closeOrNextQuiz()" class="hidden btn-quest w-full py-3.5 rounded-2xl bg-amber-400 text-slate-950 font-extrabold text-base sm:text-lg">
+                TERUSKAN ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         6. MODAL PENYUSUN KAD AJAIB (TAHAP 2 - HUTAN AJAIB)
+    ========================================================== -->
+    <div id="modal-sorter" class="hidden fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-sm">
+        <div class="quest-panel max-w-xl w-full rounded-3xl p-5 sm:p-7 animate-pop max-h-[94vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-3">
+                <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs">TAHAP 2 • PENYUSUN KAD AJAIB</span>
+                <span id="sorter-counter" class="text-xs font-extrabold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Kad 1 / 5</span>
+            </div>
+
+            <p class="text-center text-slate-700 text-xs sm:text-sm font-semibold mb-3">
+                Masukkan kad hikmah yang anda temui di Hutan Ajaib ke dalam peti yang betul!
+            </p>
+
+            <div id="sorter-card-box" class="bg-gradient-to-br from-emerald-800 to-teal-950 text-white rounded-3xl p-6 text-center border-4 border-amber-400 shadow-xl mb-4">
+                <div class="text-xs text-amber-300 font-bold mb-1">KAD HIKMAH HUTAN AJAIB</div>
+                <div id="sorter-arabic" class="arabic-display text-4xl sm:text-5xl font-bold mb-1">قَلَمٌ</div>
+                <div id="sorter-meaning" class="text-sm text-emerald-200 font-semibold">(Qalamun — Pen)</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button id="btn-sort-isim" onclick="sortCurrentCard('ISIM')" class="btn-quest p-4 rounded-2xl bg-gradient-to-b from-blue-500 to-blue-700 text-white font-extrabold border-2 border-blue-300 flex flex-col items-center gap-1">
+                    <span class="text-3xl">📦</span>
+                    <span class="text-sm sm:text-base">PETI ISIM</span>
+                    <span class="arabic-text text-base text-blue-200">الِاسْمُ</span>
+                </button>
+                <button id="btn-sort-fiil" onclick="sortCurrentCard('FIIL')" class="btn-quest p-4 rounded-2xl bg-gradient-to-b from-rose-500 to-rose-700 text-white font-extrabold border-2 border-rose-300 flex flex-col items-center gap-1">
+                    <span class="text-3xl">🧰</span>
+                    <span class="text-sm sm:text-base">PETI FI‘IL</span>
+                    <span class="arabic-text text-base text-rose-200">الْفِعْلُ</span>
+                </button>
+            </div>
+
+            <div id="sorter-feedback" class="hidden rounded-2xl p-3.5 text-xs sm:text-sm mb-3 border-2"></div>
+
+            <button id="btn-sorter-next" onclick="nextSorterCard()" class="hidden btn-quest w-full py-3.5 rounded-2xl bg-amber-400 text-slate-950 font-extrabold text-base">
+                KAD SETERUSNYA ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         7. MODAL PETA DUNIA & PERJALANAN PANTAS
+    ========================================================== -->
+    <div id="modal-worldmap" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-sm">
+        <div class="quest-panel max-w-2xl w-full rounded-3xl p-5 sm:p-7 animate-pop max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+                    <span>🗺️</span> Peta Kerajaan Bahasa Arab
+                </h3>
+                <button onclick="closeWorldMap()" class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 font-bold hover:bg-rose-200">✕</button>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 mb-4">
+                Klik pada kawasan yang telah dibuka untuk bergerak pantas atau lihat status misi setiap peringkat.
+            </p>
+            <div id="worldmap-zones" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5"></div>
+            <button onclick="closeWorldMap()" class="btn-quest w-full py-3 rounded-2xl bg-slate-800 text-white font-bold">
+                Tutup Peta
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         8. MODAL PENGESAHAN MULA SEMULA (TANPA confirm())
+    ========================================================== -->
+    <div id="modal-restart" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+        <div class="quest-panel max-w-md w-full rounded-3xl p-6 text-center animate-pop">
+            <div class="text-4xl mb-2">🔄</div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">Mula Semula Kembara?</h3>
+            <p class="text-sm text-slate-600 mb-5">Semua markah, lencana, dan kemajuan semasa akan ditetapkan semula ke permulaan.</p>
+            <div class="flex gap-3">
+                <button onclick="closeRestartConfirm()" class="btn-quest flex-1 py-3 rounded-2xl bg-slate-200 text-slate-800 font-bold">Batal</button>
+                <button onclick="confirmRestartGame()" class="btn-quest flex-1 py-3 rounded-2xl bg-rose-600 text-white font-extrabold">Ya, Mula Semula</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         9. MODAL KEMENANGAN / TAMAT KEMBARA
+    ========================================================== -->
+    <div id="modal-victory" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="quest-panel max-w-xl w-full rounded-3xl p-6 sm:p-8 text-center animate-pop max-h-[94vh] overflow-y-auto">
+            <div class="text-5xl sm:text-6xl mb-2 animate-bounce">👑</div>
+            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-xs">TAHNIAH! JUARA KERAJAAN ARAB</span>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-2 mb-1">KEMBARA SELESAI!</h2>
+            <div class="arabic-display text-2xl sm:text-3xl font-bold text-emerald-700 mb-4">
+                أَحْسَنْتَ! أَنْتَ بَطَلُ اللُّغَةِ الْعَرَبِيَّةِ
+            </div>
+            <p class="text-slate-600 text-xs sm:text-sm mb-5">
+                Anda telah berjaya menguasai perbezaan antara <strong class="text-blue-600">Isim (<span class="arabic-text">الِاسْمُ</span>)</strong> dan <strong class="text-rose-600">Fi‘il (<span class="arabic-text">الْفِعْلُ</span>)</strong> serta membebaskan Kerajaan Yang Hilang!
+            </p>
+            <div class="grid grid-cols-2 gap-3 mb-5">
+                <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3">
+                    <div class="text-xs font-bold text-amber-800">JUMLAH MATA</div>
+                    <div id="victory-score" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</div>
+                </div>
+                <div class="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-3">
+                    <div class="text-xs font-bold text-yellow-800">BINTANG HIKMAH</div>
+                    <div id="victory-stars" class="text-2xl sm:text-3xl font-extrabold text-amber-600">12 / 12 ⭐</div>
+                </div>
+            </div>
+            <button onclick="confirmRestartGame()" class="btn-quest w-full py-4 rounded-2xl bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 font-extrabold text-lg">
+                MAIN SEMULA KEMBARA ⚔️
+            </button>
+        </div>
+    </div>
+
+    <!-- Pemberitahuan Ringkas (Toast) -->
+    <div id="toast-banner" class="hidden fixed top-24 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-slate-900/95 text-amber-300 border-2 border-amber-400 font-extrabold text-xs sm:text-sm shadow-2xl text-center max-w-md animate-pop pointer-events-none"></div>
+
+    <script>
+    // =========================================================================
+    // 1. DATA KURIKULUM BAHASA ARAB TAHUN 4 (ISIM & FI'IL) & KONFIGURASI GAME
+    // =========================================================================
+    const HERO_OPTIONS = [
+        {
+            id: 'boy',
+            name: 'Lelaki (وَلَدٌ)',
+            arabic: 'وَلَدٌ',
+            avatar: '👦',
+            desc: 'Kopiah biru, baju Melayu berbutang 5, seluar putih berlipat & sandal kulit.',
+            accent: 'border-blue-500 bg-blue-50'
+        },
+        {
+            id: 'girl',
+            name: 'Perempuan (بِنْتٌ)',
+            arabic: 'بِنْتٌ',
+            avatar: '👧',
+            desc: 'Tudung berlapis sopan, baju berbutang mutiara, seluar krim & sandal kulit.',
+            accent: 'border-rose-500 bg-rose-50'
+        }
+    ];
+
+    // Tahap 1: 5 Objek Arab di Kampung Permulaan
+    const STAGE1_OBJECTS = [
+        {
+            id: 'obj_kitab',
+            arabic: 'كِتَابٌ',
+            translit: 'Kitābun — Buku',
+            type: 'ISIM',
+            icon: '📖',
+            pos: { x: -11, z: 36 },
+            explanation: 'كِتَابٌ (Buku) ialah ISIM (Kata Nama) kerana merujuk kepada nama suatu benda.'
+        },
+        {
+            id: 'obj_yashrabu',
+            arabic: 'يَشْرَبُ',
+            translit: 'Yashrabu — Dia sedang minum',
+            type: 'FIIL',
+            icon: '🥛',
+            pos: { x: 11, z: 37 },
+            explanation: 'يَشْرَبُ (Sedang minum) ialah FI‘IL (Kata Kerja) kerana menunjukkan perbuatan yang sedang berlaku.'
+        },
+        {
+            id: 'obj_masjid',
+            arabic: 'مَسْجِدٌ',
+            translit: 'Masjidun — Masjid',
+            type: 'ISIM',
+            icon: '🕌',
+            pos: { x: -13, z: 24 },
+            explanation: 'مَسْجِدٌ (Masjid) ialah ISIM (Kata Nama) kerana merujuk kepada nama tempat beribadat.'
+        },
+        {
+            id: 'obj_yaktubu',
+            arabic: 'يَكْتُبُ',
+            translit: 'Yaktubu — Dia sedang menulis',
+            type: 'FIIL',
+            icon: '✍️',
+            pos: { x: 12, z: 25 },
+            explanation: 'يَكْتُبُ (Sedang menulis) ialah FI‘IL (Kata Kerja) kerana menunjukkan tindakan menulis.'
+        },
+        {
+            id: 'obj_shajarah',
+            arabic: 'شَجَرَةٌ',
+            translit: 'Shajaratun — Pokok',
+            type: 'ISIM',
+            icon: '🌳',
+            pos: { x: 0, z: 20 },
+            explanation: 'شَجَرَةٌ (Pokok) ialah ISIM (Kata Nama) kerana merujuk kepada nama tumbuhan dan berakhir dengan Ta Marbutah (ة).'
+        }
+    ];
+
+    // Tahap 2: 5 Kad Hikmah Tersembunyi di Hutan Ajaib
+    const STAGE2_CARDS = [
+        {
+            id: 'card_qalam',
+            arabic: 'قَلَمٌ',
+            translit: 'Qalamun — Pen',
+            type: 'ISIM',
+            pos: { x: -12, z: 3 },
+            explanation: 'قَلَمٌ (Pen) ialah ISIM (Kata Nama) bagi alat tulis dan menerima tanwin (ـٌ).'
+        },
+        {
+            id: 'card_yajri',
+            arabic: 'يَجْرِي',
+            translit: 'Yajrī — Dia sedang berlari',
+            type: 'FIIL',
+            pos: { x: 12, z: 2 },
+            explanation: 'يَجْرِي (Sedang berlari) ialah FI‘IL (Kata Kerja) yang menunjukkan pergerakan.'
+        },
+        {
+            id: 'card_asad',
+            arabic: 'أَسَدٌ',
+            translit: 'Asadun — Singa',
+            type: 'ISIM',
+            pos: { x: -11, z: -11 },
+            explanation: 'أَسَدٌ (Singa) ialah ISIM (Kata Nama) yang merujuk kepada nama haiwan.'
+        },
+        {
+            id: 'card_yakulu',
+            arabic: 'يَأْكُلُ',
+            translit: 'Ya’kulu — Dia sedang makan',
+            type: 'FIIL',
+            pos: { x: 11, z: -12 },
+            explanation: 'يَأْكُلُ (Sedang makan) ialah FI‘IL (Kata Kerja) kerana menunjukkan perbuatan makan.'
+        },
+        {
+            id: 'card_zahrah',
+            arabic: 'زَهْرَةٌ',
+            translit: 'Zahratun — Bunga',
+            type: 'ISIM',
+            pos: { x: 0, z: -15 },
+            explanation: 'زَهْرَةٌ (Bunga) ialah ISIM (Kata Nama) bagi tumbuhan dan mempunyai tanda tanwin.'
+        }
+    ];
+
+    // Tahap 3: 5 Teka-Teki Detektif Ayat di Istana Misteri
+    const STAGE3_SENTENCES = [
+        {
+            id: 'sent_1',
+            arabic: 'يَقْرَأُ التِّلْمِيذُ الْكِتَابَ',
+            highlight: 'يَقْرَأُ',
+            translit: 'Ayat: Murid itu sedang membaca buku • Perkataan diuji: يَقْرَأُ (Membaca)',
+            type: 'FIIL',
+            pos: { x: -10, z: -34 },
+            explanation: 'يَقْرَأُ (Sedang membaca) ialah FI‘IL Mudhari‘ kerana menunjukkan perbuatan membaca.'
+        },
+        {
+            id: 'sent_2',
+            arabic: 'الطَّالِبُ مُجْتَهِدٌ فِي الصَّفِّ',
+            highlight: 'الطَّالِبُ',
+            translit: 'Ayat: Pelajar itu rajin di dalam kelas • Perkataan diuji: الطَّالِبُ (Pelajar)',
+            type: 'ISIM',
+            pos: { x: 10, z: -34 },
+            explanation: 'الطَّالِبُ (Pelajar) ialah ISIM kerana merujuk kepada manusia dan bermula dengan Alif Lam (ال).'
+        },
+        {
+            id: 'sent_3',
+            arabic: 'تَذْهَبُ فَاطِمَةُ إِلَى الْمَدْرَسَةِ',
+            highlight: 'تَذْهَبُ',
+            translit: 'Ayat: Fatimah pergi ke sekolah • Perkataan diuji: تَذْهَبُ (Pergi)',
+            type: 'FIIL',
+            pos: { x: -11, z: -47 },
+            explanation: 'تَذْهَبُ (Sedang pergi) ialah FI‘IL kerana menunjukkan perbuatan bergerak ke sekolah.'
+        },
+        {
+            id: 'sent_4',
+            arabic: 'الْحَدِيقَةُ جَمِيلَةٌ وَوَاسِعَةٌ',
+            highlight: 'الْحَدِيقَةُ',
+            translit: 'Ayat: Taman itu cantik dan luas • Perkataan diuji: الْحَدِيقَةُ (Taman)',
+            type: 'ISIM',
+            pos: { x: 11, z: -47 },
+            explanation: 'الْحَدِيقَةُ (Taman) ialah ISIM kerana merujuk kepada tempat serta memiliki (ال) dan (ة).'
+        },
+        {
+            id: 'sent_5',
+            arabic: 'يَلْعَبُ الْوَلَدُ بِالْكُرَةِ',
+            highlight: 'يَلْعَبُ',
+            translit: 'Ayat: Budak lelaki itu bermain bola • Perkataan diuji: يَلْعَبُ (Bermain)',
+            type: 'FIIL',
+            pos: { x: 0, z: -53 },
+            explanation: 'يَلْعَبُ (Sedang bermain) ialah FI‘IL kerana menunjukkan aksi permainan.'
+        }
+    ];
+
+    // Tahap 4: 10 Soalan Pertarungan Akhir Raja Penjaga Ilmu
+    const STAGE4_BOSS_QUESTIONS = [
+        { arabic: 'مُعَلِّمٌ', translit: 'Mu‘allimun — Guru', type: 'ISIM', explanation: 'مُعَلِّمٌ (Guru) ialah ISIM kerana merujuk kepada pekerjaan/manusia.' },
+        { arabic: 'يَجْلِسُ', translit: 'Yajlisu — Dia sedang duduk', type: 'FIIL', explanation: 'يَجْلِسُ (Duduk) ialah FI‘IL kerana menunjukkan perbuatan duduk.' },
+        { arabic: 'الْبَيْتُ', translit: 'Al-Baytu — Rumah itu', type: 'ISIM', explanation: 'الْبَيْتُ (Rumah) ialah ISIM kerana nama tempat dan bermula dengan Alif Lam (ال).' },
+        { arabic: 'فَتَحَ', translit: 'Fataḥa — Dia telah membuka', type: 'FIIL', explanation: 'فَتَحَ (Telah membuka) ialah FI‘IL Madhi (kata kerja lampau).' },
+        { arabic: 'سَيَّارَةٌ', translit: 'Sayyāratun — Kereta', type: 'ISIM', explanation: 'سَيَّارَةٌ (Kereta) ialah ISIM bagi kenderaan.' },
+        { arabic: 'يَسْمَعُ', translit: 'Yasma‘u — Dia sedang mendengar', type: 'FIIL', explanation: 'يَسْمَعُ (Mendengar) ialah FI‘IL kerana perbuatan mendengar.' },
+        { arabic: 'قِطٌّ', translit: 'Qiṭṭun — Kucing', type: 'ISIM', explanation: 'قِطٌّ (Kucing) ialah ISIM bagi haiwan.' },
+        { arabic: 'نَامَ', translit: 'Nāma — Dia telah tidur', type: 'FIIL', explanation: 'نَامَ (Telah tidur) ialah FI‘IL kerana menunjukkan perbuatan tidur.' },
+        { arabic: 'الْمَاءُ', translit: 'Al-Mā’u — Air itu', type: 'ISIM', explanation: 'الْمَاءُ (Air) ialah ISIM kerana kata nama benda dan bermula dengan (ال).' },
+        { arabic: 'يَرْسُمُ', translit: 'Yarsumu — Dia sedang melukis', type: 'FIIL', explanation: 'يَرْسُمُ (Melukis) ialah FI‘IL kerana menunjukkan perbuatan melukis.' }
+    ];
+
+    // =========================================================================
+    // 2. KEADAAN PERMAINAN (GAME STATE)
+    // =========================================================================
+    const gameState = {
+        started: false,
+        heroId: 'boy',
+        cameraMode: 'TPP', // 'TPP' atau 'FPP'
+        deviceMode: 'PC',  // 'TELEFON', 'TABLET', 'LAPTOP', 'PC'
+        muted: false,
+        score: 0,
+        stars: 0,
+        unlockedStage: 1, // 1..4
+        badges: [false, false, false, false],
+
+        // Kemajuan Tahap 1
+        s1Answered: {}, // id -> boolean (true jika betul)
+        s1Passed: false,
+
+        // Kemajuan Tahap 2
+        s2Collected: {}, // id -> true
+        s2Sorted: {},    // id -> boolean
+        s2Passed: false,
+
+        // Kemajuan Tahap 3
+        s3Answered: {}, // id -> boolean
+        s3Passed: false,
+
+        // Kemajuan Tahap 4
+        s4Completed: false,
+        s4Score: 0,
+
+        // Konteks modal kuiz semasa
+        activeQuiz: null,
+        activeSorterIdx: 0
+    };
+
+    // =========================================================================
+    // 3. PENJANA AUDIO PROSEDURAL (WEB AUDIO API - TANPA PAUTAN LUAR)
+    // =========================================================================
+    let audioCtx = null;
+    function ensureAudio() {
+        if (!audioCtx) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx) audioCtx = new Ctx();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(() => {});
+        }
+    }
+
+    function playTone(freq, duration = 0.14, type = 'sine', vol = 0.12, delay = 0) {
+        if (gameState.muted) return;
+        try {
+            ensureAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime + delay;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(vol, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + duration);
+        } catch (e) {}
+    }
+
+    function playSound(kind) {
+        if (gameState.muted) return;
+        if (kind === 'jump') {
+            playTone(260, 0.14, 'triangle', 0.12, 0);
+            playTone(420, 0.16, 'triangle', 0.1, 0.05);
+        } else if (kind === 'pickup') {
+            playTone(587.33, 0.12, 'sine', 0.14, 0);
+            playTone(880, 0.22, 'sine', 0.14, 0.09);
+        } else if (kind === 'correct') {
+            playTone(523.25, 0.12, 'triangle', 0.15, 0);
+            playTone(659.25, 0.12, 'triangle', 0.15, 0.1);
+            playTone(783.99, 0.25, 'triangle', 0.16, 0.2);
+        } else if (kind === 'wrong') {
+            playTone(220, 0.18, 'sawtooth', 0.1, 0);
+            playTone(175, 0.24, 'sawtooth', 0.1, 0.14);
+        } else if (kind === 'unlock') {
+            [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => playTone(f, 0.22, 'triangle', 0.15, i * 0.09));
+        }
+    }
+
+    function toggleMute() {
+        gameState.muted = !gameState.muted;
+        document.getElementById('btn-mute').textContent = gameState.muted ? '🔇' : '🔊';
+        showToast(gameState.muted ? 'Bunyi dimatikan 🔇' : 'Bunyi diaktifkan 🔊');
+    }
+
+    // =========================================================================
+    // 4. TEKSTUR PROSEDURAL KANVAS (TANPA PAUTAN LUAR)
+    // =========================================================================
+    function createProceduralTexture(type) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+
+        if (type === 'sand') {
+            ctx.fillStyle = '#e7c98b';
+            ctx.fillRect(0, 0, 256, 256);
+            for (let i = 0; i < 3200; i++) {
+                const x = Math.random() * 256;
+                const y = Math.random() * 256;
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(210,170,105,0.45)' : 'rgba(255,244,214,0.45)';
+                ctx.fillRect(x, y, 2, 2);
+            }
+            // Riak pasir lembut
+            ctx.strokeStyle = 'rgba(194,150,86,0.25)';
+            ctx.lineWidth = 3;
+            for (let y = 16; y < 256; y += 32) {
+                ctx.beginPath();
+                for (let x = 0; x <= 256; x += 16) {
+                    ctx.lineTo(x, y + Math.sin(x * 0.05) * 4);
+                }
+                ctx.stroke();
+            }
+        } else if (type === 'grass') {
+            ctx.fillStyle = '#3f8f46';
+            ctx.fillRect(0, 0, 256, 256);
+            for (let i = 0; i < 3600; i++) {
+                const x = Math.random() * 256;
+                const y = Math.random() * 256;
+                ctx.fillStyle = Math.random() > 0.45 ? '#2f7336' : '#5cb356';
+                ctx.fillRect(x, y, 2, 5);
+            }
+        } else if (type === 'marble') {
+            ctx.fillStyle = '#f8f5ec';
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = 'rgba(217, 179, 108, 0.45)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(4, 4, 120, 120);
+            ctx.strokeRect(132, 4, 120, 120);
+            ctx.strokeRect(4, 132, 120, 120);
+            ctx.strokeRect(132, 132, 120, 120);
+            // Urat marmar halus
+            ctx.strokeStyle = 'rgba(180, 165, 140, 0.25)';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 14; i++) {
+                ctx.beginPath();
+                let px = Math.random() * 256;
+                let py = Math.random() * 256;
+                ctx.moveTo(px, py);
+                for (let s = 0; s < 6; s++) {
+                    px += (Math.random() - 0.5) * 50;
+                    py += (Math.random() - 0.5) * 50;
+                    ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+            }
+        } else if (type === 'cobble') {
+            ctx.fillStyle = '#948979';
+            ctx.fillRect(0, 0, 256, 256);
+            const colors = ['#b5aa99', '#a39786', '#c7bdb0', '#8d8171'];
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const bx = (col * 32 + (row % 2 === 0 ? 2 : 10)) % 236;
+                    const by = row * 32 + 3;
+                    ctx.fillStyle = colors[(row + col) % colors.length];
+                    ctx.fillRect(bx, by, 26, 25);
+                    ctx.strokeStyle = 'rgba(60, 50, 40, 0.35)';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(bx, by, 26, 25);
+                }
+            }
+        } else if (type === 'bark') {
+            ctx.fillStyle = '#5c3a21';
+            ctx.fillRect(0, 0, 256, 256);
+            for (let i = 0; i < 140; i++) {
+                const x = Math.random() * 256;
+                ctx.fillStyle = i % 2 === 0 ? '#3e2412' : '#744b2c';
+                ctx.fillRect(x, 0, 2 + Math.random() * 4, 256);
+            }
+            for (let i = 0; i < 600; i++) {
+                ctx.fillStyle = 'rgba(30, 16, 8, 0.35)';
+                ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 12);
+            }
+        } else if (type === 'leaves') {
+            ctx.fillStyle = '#2d7a36';
+            ctx.fillRect(0, 0, 256, 256);
+            const greens = ['#1f5e27', '#2f853a', '#44a349', '#63bf56'];
+            for (let i = 0; i < 950; i++) {
+                ctx.fillStyle = greens[i % greens.length];
+                ctx.beginPath();
+                ctx.ellipse(
+                    Math.random() * 256,
+                    Math.random() * 256,
+                    4 + Math.random() * 6,
+                    2.5 + Math.random() * 4,
+                    Math.random() * Math.PI,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        return tex;
+    }
+
+    // =========================================================================
+    // 5. PEMBINA WATAK 3D REALISTIK (LELAKI وَلَدٌ & PEREMPUAN بِنْتٌ)
+    // =========================================================================
+    function createRealisticCharacter(options = {}) {
+        const {
+            type = 'boy',         // 'boy', 'girl', 'ustaz', 'ranger', 'wazir', 'king'
+            shirtColor = 0x2563eb,
+            pantsColor = 0xf8fafc,
+            headwearColor = 0x1d4ed8,
+            skinColor = 0xf2c29b
+        } = options;
+
+        const root = new THREE.Group();
+
+        const skinMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.55, metalness: 0.04 });
+        const shirtMat = new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.62, metalness: 0.05 });
+        const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor, roughness: 0.68, metalness: 0.03 });
+        const sandalLeatherMat = new THREE.MeshStandardMaterial({ color: 0x7c3f1d, roughness: 0.55, metalness: 0.08 });
+        const sandalSoleMat = new THREE.MeshStandardMaterial({ color: 0x4a2511, roughness: 0.8 });
+        const hairMat = new THREE.MeshStandardMaterial({ color: 0x1e1b18, roughness: 0.75 });
+        const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.75 });
+
+        // --- BADAN / BAJU BERLENGAN PANJANG ---
+        const torsoGroup = new THREE.Group();
+        torsoGroup.position.y = 1.08;
+        root.add(torsoGroup);
+
+        // Badan utama baju Melayu / blaus sopan
+        const chestGeo = new THREE.CylinderGeometry(0.24, 0.27, 0.66, 20);
+        const chestMesh = new THREE.Mesh(chestGeo, shirtMat);
+        chestMesh.castShadow = true;
+        chestMesh.receiveShadow = true;
+        torsoGroup.add(chestMesh);
+
+        // Kolar Mandarin (Cekak Musang)
+        const collarGeo = new THREE.CylinderGeometry(0.125, 0.135, 0.09, 18);
+        const collarMesh = new THREE.Mesh(collarGeo, shirtMat);
+        collarMesh.position.y = 0.35;
+        collarMesh.castShadow = true;
+        torsoGroup.add(collarMesh);
+
+        // Plaket dada & 5 Butang (Putih untuk Lelaki, Mutiara untuk Perempuan)
+        const placketGeo = new THREE.BoxGeometry(0.05, 0.36, 0.03);
+        const placketMesh = new THREE.Mesh(placketGeo, shirtMat);
+        placketMesh.position.set(0, 0.14, 0.245);
+        torsoGroup.add(placketMesh);
+
+        const buttonGeo = new THREE.SphereGeometry(0.017, 10, 10);
+        const buttonMat = type === 'girl'
+            ? new THREE.MeshStandardMaterial({ color: 0xfffbeb, roughness: 0.2, metalness: 0.3 })
+            : whiteMat;
+        for (let b = 0; b < 5; b++) {
+            const btn = new THREE.Mesh(buttonGeo, buttonMat);
+            btn.position.set(0, 0.27 - b * 0.068, 0.262);
+            torsoGroup.add(btn);
+        }
+
+        // Bahagian bawah baju (labuh kemas)
+        const tunicHemGeo = new THREE.CylinderGeometry(0.27, 0.30, 0.24, 20);
+        const tunicHem = new THREE.Mesh(tunicHemGeo, shirtMat);
+        tunicHem.position.y = -0.36;
+        tunicHem.castShadow = true;
+        torsoGroup.add(tunicHem);
+
+        // Jubah khas untuk NPC ilmuwan / raja
+        if (type === 'ustaz' || type === 'wazir' || type === 'king') {
+            const robeTrimMat = type === 'king' ? goldMat : new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.4 });
+            const robeGeo = new THREE.CylinderGeometry(0.28, 0.36, 0.88, 20, 1, true);
+            const robeMesh = new THREE.Mesh(robeGeo, robeTrimMat);
+            robeMesh.position.y = -0.1;
+            torsoGroup.add(robeMesh);
+        }
+
+        // --- KEPALA & WAJAH REALISTIK ---
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.62;
+        torsoGroup.add(headGroup);
+
+        // Leher
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.12, 16), skinMat);
+        neck.position.y = -0.21;
+        headGroup.add(neck);
+
+        // Tengkorak & wajah
+        const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.235, 24, 24), skinMat);
+        headMesh.scale.set(0.96, 1.04, 0.98);
+        headMesh.castShadow = true;
+        headGroup.add(headMesh);
+
+        // Telinga kiri & kanan (untuk lelaki / watak tidak bertudung penuh)
+        if (type !== 'girl' && type !== 'ranger') {
+            const earGeo = new THREE.SphereGeometry(0.042, 12, 12);
+            const earL = new THREE.Mesh(earGeo, skinMat);
+            earL.scale.set(0.55, 1.15, 0.8);
+            earL.position.set(-0.225, -0.01, -0.01);
+            const earR = earL.clone();
+            earR.position.x = 0.225;
+            headGroup.add(earL, earR);
+
+            // Rambut kemas di sisi & belakang
+            const hairCap = new THREE.Mesh(
+                new THREE.SphereGeometry(0.242, 22, 18, 0, Math.PI * 2, 0, Math.PI * 0.58),
+                type === 'ustaz' ? whiteMat : hairMat
+            );
+            hairCap.rotation.x = -0.22;
+            headGroup.add(hairCap);
+        }
+
+        // Jambang & misai kemas untuk Watak Lelaki (mengikut rujukan gambar 1) serta Ustaz/Raja
+        if (type === 'boy' || type === 'ustaz' || type === 'wazir' || type === 'king') {
+            const beardMat = (type === 'ustaz') ? whiteMat : hairMat;
+            const jawBeard = new THREE.Mesh(
+                new THREE.TorusGeometry(0.145, 0.026, 10, 20, Math.PI * 0.85),
+                beardMat
+            );
+            jawBeard.rotation.z = Math.PI * 1.075;
+            jawBeard.rotation.x = 0.45;
+            jawBeard.position.set(0, -0.095, 0.135);
+            headGroup.add(jawBeard);
+
+            const chinBeard = new THREE.Mesh(new THREE.SphereGeometry(0.048, 12, 12), beardMat);
+            chinBeard.scale.set(1.2, 0.9, 0.7);
+            chinBeard.position.set(0, -0.185, 0.165);
+            headGroup.add(chinBeard);
+        }
+
+        // Hidung realistik
+        const nose = new THREE.Mesh(new THREE.ConeGeometry(0.026, 0.065, 12), skinMat);
+        nose.rotation.x = Math.PI * 0.42;
+        nose.position.set(0, -0.015, 0.235);
+        headGroup.add(nose);
+
+        // Mata bersinar (Sclera + Iris + Catchlight) & Kening
+        const eyePositions = [-0.078, 0.078];
+        eyePositions.forEach((ex) => {
+            const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.034, 14, 14), whiteMat);
+            sclera.scale.set(1.05, 0.9, 0.65);
+            sclera.position.set(ex, 0.032, 0.212);
+            headGroup.add(sclera);
+
+            const iris = new THREE.Mesh(
+                new THREE.SphereGeometry(0.021, 12, 12),
+                new THREE.MeshStandardMaterial({ color: 0x2b1810, roughness: 0.15 })
+            );
+            iris.position.set(ex, 0.032, 0.228);
+            headGroup.add(iris);
+
+            const catchlight = new THREE.Mesh(new THREE.SphereGeometry(0.007, 8, 8), whiteMat);
+            catchlight.position.set(ex + 0.007, 0.039, 0.244);
+            headGroup.add(catchlight);
+
+            // Kening
+            const brow = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.014, 0.018), hairMat);
+            brow.position.set(ex, 0.082, 0.222);
+            brow.rotation.z = ex < 0 ? 0.08 : -0.08;
+            headGroup.add(brow);
+        });
+
+        // Mulut tersenyum
+        const smile = new THREE.Mesh(
+            new THREE.TorusGeometry(0.048, 0.011, 8, 16, Math.PI * 0.8),
+            new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.4 })
+        );
+        smile.rotation.z = Math.PI * 1.1;
+        smile.position.set(0, -0.085, 0.218);
+        headGroup.add(smile);
+
+        // --- PENUTUP KEPALA (KOPIAH BIRU / TUDUNG BERLAPIS / SERBAN / MAHKOTA) ---
+        const headwearMat = new THREE.MeshStandardMaterial({ color: headwearColor, roughness: 0.55 });
+        if (type === 'boy') {
+            // Kopiah Biru realistik
+            const kopiah = new THREE.Mesh(new THREE.CylinderGeometry(0.215, 0.232, 0.145, 24), headwearMat);
+            kopiah.position.y = 0.175;
+            kopiah.castShadow = true;
+            headGroup.add(kopiah);
+
+            const kopiahTop = new THREE.Mesh(new THREE.SphereGeometry(0.215, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.35), headwearMat);
+            kopiahTop.position.y = 0.205;
+            headGroup.add(kopiahTop);
+
+            // Jalur sulaman halus di tepi kopiah
+            const kopiahRim = new THREE.Mesh(
+                new THREE.TorusGeometry(0.231, 0.009, 8, 28),
+                new THREE.MeshStandardMaterial({ color: 0x60a5fa, roughness: 0.4 })
+            );
+            kopiahRim.rotation.x = Math.PI / 2;
+            kopiahRim.position.y = 0.115;
+            headGroup.add(kopiahRim);
+        } else if (type === 'girl' || type === 'ranger') {
+            // Tudung berlapis realistik untuk watak perempuan
+            const hijabHood = new THREE.Mesh(
+                new THREE.SphereGeometry(0.268, 24, 24, 0, Math.PI * 2, 0, Math.PI * 0.78),
+                headwearMat
+            );
+            hijabHood.rotation.x = -0.18;
+            hijabHood.castShadow = true;
+            headGroup.add(hijabHood);
+
+            // Lapisan tudung menutupi bahu & dada
+            const hijabDrape = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.52, 24, 1, true), headwearMat);
+            hijabDrape.position.set(0, 0.28, -0.02);
+            hijabDrape.castShadow = true;
+            torsoGroup.add(hijabDrape);
+        } else if (type === 'ustaz' || type === 'wazir') {
+            // Serban ilmuwan
+            const turban = new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.075, 14, 24), headwearMat);
+            turban.rotation.x = Math.PI / 2;
+            turban.position.y = 0.15;
+            headGroup.add(turban);
+            const cap = new THREE.Mesh(new THREE.SphereGeometry(0.21, 20, 14), goldMat);
+            cap.position.y = 0.16;
+            headGroup.add(cap);
+        } else if (type === 'king') {
+            // Mahkota Diraja
+            const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.20, 0.16, 16), goldMat);
+            crown.position.y = 0.22;
+            headGroup.add(crown);
+        }
+
+        // --- LENGAN BERLENGAN PANJANG (KIRI & KANAN) ---
+        function createArm(side) {
+            const pivot = new THREE.Group();
+            pivot.position.set(side * 0.31, 0.25, 0);
+
+            const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.064, 0.48, 14), shirtMat);
+            sleeve.position.y = -0.22;
+            sleeve.castShadow = true;
+            pivot.add(sleeve);
+
+            const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.066, 0.066, 0.05, 14), shirtMat);
+            cuff.position.y = -0.45;
+            pivot.add(cuff);
+
+            const hand = new THREE.Mesh(new THREE.SphereGeometry(0.058, 14, 14), skinMat);
+            hand.scale.set(0.85, 1.15, 0.75);
+            hand.position.y = -0.51;
+            hand.castShadow = true;
+            pivot.add(hand);
+
+            return pivot;
+        }
+        const leftArm = createArm(-1);
+        const rightArm = createArm(1);
+        torsoGroup.add(leftArm, rightArm);
+
+        // --- KAKI, SELUAR PUTIH BERLIPAT DI BUKU LALI & SANDAL KULIT COKLAT + JARI KAKI ---
+        function createLeg(side) {
+            const pivot = new THREE.Group();
+            pivot.position.set(side * 0.13, 0.72, 0);
+
+            // Seluar putih / krim
+            const trouser = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.082, 0.56, 16), pantsMat);
+            trouser.position.y = -0.28;
+            trouser.castShadow = true;
+            pivot.add(trouser);
+
+            // Lipatan kaki seluar di buku lali (cuff berlipat)
+            const foldedCuff = new THREE.Mesh(new THREE.TorusGeometry(0.084, 0.018, 10, 20), pantsMat);
+            foldedCuff.rotation.x = Math.PI / 2;
+            foldedCuff.position.y = -0.55;
+            pivot.add(foldedCuff);
+
+            // Buku lali & tapak kaki kulit
+            const ankle = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.062, 0.11, 14), skinMat);
+            ankle.position.y = -0.61;
+            pivot.add(ankle);
+
+            const foot = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.048, 0.22), skinMat);
+            foot.position.set(0, -0.675, 0.045);
+            foot.castShadow = true;
+            pivot.add(foot);
+
+            // 5 Jari Kaki Realistik di hujung sandal
+            for (let t = 0; t < 5; t++) {
+                const toeRadius = t === 0 ? 0.015 : 0.011;
+                const toe = new THREE.Mesh(new THREE.SphereGeometry(toeRadius, 8, 8), skinMat);
+                const offsetX = side === -1 ? (0.042 - t * 0.021) : (-0.042 + t * 0.021);
+                toe.position.set(offsetX, -0.682, 0.158 - t * 0.004);
+                pivot.add(toe);
+            }
+
+            // Tapak Sandal Kulit Coklat
+            const sole = new THREE.Mesh(new THREE.BoxGeometry(0.132, 0.026, 0.255), sandalSoleMat);
+            sole.position.set(0, -0.706, 0.05);
+            sole.castShadow = true;
+            sole.receiveShadow = true;
+            pivot.add(sole);
+
+            // Tali Sandal Kulit Silang
+            const strap1 = new THREE.Mesh(new THREE.BoxGeometry(0.136, 0.022, 0.045), sandalLeatherMat);
+            strap1.position.set(0, -0.665, 0.075);
+            strap1.rotation.y = side * 0.22;
+            pivot.add(strap1);
+
+            const strap2 = new THREE.Mesh(new THREE.BoxGeometry(0.136, 0.022, 0.04), sandalLeatherMat);
+            strap2.position.set(0, -0.662, 0.015);
+            strap2.rotation.y = -side * 0.22;
+            pivot.add(strap2);
+
+            return pivot;
+        }
+        const leftLeg = createLeg(-1);
+        const rightLeg = createLeg(1);
+        root.add(leftLeg, rightLeg);
+
+        return {
+            group: root,
+            torso: torsoGroup,
+            head: headGroup,
+            leftArm,
+            rightArm,
+            leftLeg,
+            rightLeg
+        };
+    }
+
+    // =========================================================================
+    // 6. PEMBINA POKOK 3D REALISTIK (MENGIKUT RUJUKAN GAMBAR 2 & POKOK KELAPA)
+    // =========================================================================
+    let sharedBarkMat = null;
+    let sharedLeafMaterials = null;
+    let sharedGrassBaseMat = null;
+
+    function initSharedFoliageMaterials() {
+        if (sharedBarkMat) return;
+        const barkTex = createProceduralTexture('bark');
+        barkTex.repeat.set(2, 4);
+        sharedBarkMat = new THREE.MeshStandardMaterial({
+            map: barkTex,
+            bumpMap: barkTex,
+            bumpScale: 0.08,
+            roughness: 0.88,
+            metalness: 0.02
+        });
+
+        const leafTex = createProceduralTexture('leaves');
+        leafTex.repeat.set(2, 2);
+        const leafTones = [0x266b2e, 0x33873b, 0x45a349, 0x2d7a36];
+        sharedLeafMaterials = leafTones.map(color => new THREE.MeshStandardMaterial({
+            color,
+            map: leafTex,
+            bumpMap: leafTex,
+            bumpScale: 0.05,
+            roughness: 0.78,
+            metalness: 0.02
+        }));
+
+        sharedGrassBaseMat = new THREE.MeshStandardMaterial({
+            color: 0x3b8c3f,
+            roughness: 0.9
+        });
+    }
+
+    // Geometri dedaun berbonjol (Displaced Icosahedron gaya brokoli/realistik)
+    const cachedCanopyGeos = [];
+    function getCanopyClusterGeo(variant = 0) {
+        if (cachedCanopyGeos[variant]) return cachedCanopyGeos[variant];
+        const geo = new THREE.IcosahedronGeometry(1.0, 2);
+        const pos = geo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+            const vx = pos.getX(i);
+            const vy = pos.getY(i);
+            const vz = pos.getZ(i);
+            const noise = 1 + 0.18 * Math.sin(vx * 4.5 + variant) * Math.cos(vy * 4.2) + 0.12 * Math.sin(vz * 5.1);
+            pos.setXYZ(i, vx * noise, vy * noise * 0.82, vz * noise);
+        }
+        geo.computeVertexNormals();
+        cachedCanopyGeos[variant] = geo;
+        return geo;
+    }
+
+    function createRealisticTree(scale = 1.0, seed = 1) {
+        initSharedFoliageMaterials();
+        const tree = new THREE.Group();
+
+        // 1. Tapak rumput hijau & semak kecil di pangkal pokok (seperti rujukan gambar 2)
+        const grassMound = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.75, 0.22, 16), sharedGrassBaseMat);
+        grassMound.position.y = 0.1;
+        grassMound.receiveShadow = true;
+        tree.add(grassMound);
+
+        for (let b = 0; b < 5; b++) {
+            const angle = (b / 5) * Math.PI * 2 + seed;
+            const bush = new THREE.Mesh(
+                getCanopyClusterGeo(b % 3),
+                sharedLeafMaterials[(b + seed) % sharedLeafMaterials.length]
+            );
+            bush.scale.set(0.45 + (b % 2) * 0.15, 0.35, 0.45);
+            bush.position.set(Math.cos(angle) * 1.05, 0.25, Math.sin(angle) * 1.05);
+            bush.castShadow = true;
+            bush.receiveShadow = true;
+            tree.add(bush);
+        }
+
+        // 2. Akar mengembang di pangkal pokok
+        for (let r = 0; r < 5; r++) {
+            const rAngle = (r / 5) * Math.PI * 2 + seed * 0.4;
+            const rootButtress = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.28, 1.15, 8), sharedBarkMat);
+            rootButtress.position.set(Math.cos(rAngle) * 0.34, 0.45, Math.sin(rAngle) * 0.34);
+            rootButtress.rotation.z = -Math.cos(rAngle) * 0.45;
+            rootButtress.rotation.x = Math.sin(rAngle) * 0.45;
+            rootButtress.castShadow = true;
+            tree.add(rootButtress);
+        }
+
+        // 3. Batang utama bertekstur kulit kayu
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.52, 2.9, 14), sharedBarkMat);
+        trunk.position.y = 1.45;
+        trunk.castShadow = true;
+        trunk.receiveShadow = true;
+        tree.add(trunk);
+
+        // 4. Dahan utama & ranting bercabang
+        const branchConfigs = [
+            { angle: 0.3, tilt: 0.58, len: 1.9, y: 2.55, rTop: 0.13, rBot: 0.22 },
+            { angle: 2.4, tilt: 0.62, len: 1.85, y: 2.65, rTop: 0.13, rBot: 0.21 },
+            { angle: 4.5, tilt: 0.54, len: 1.95, y: 2.5, rTop: 0.14, rBot: 0.22 },
+            { angle: 1.3, tilt: 0.25, len: 1.7, y: 2.85, rTop: 0.12, rBot: 0.20 }
+        ];
+
+        branchConfigs.forEach((cfg, idx) => {
+            const bPivot = new THREE.Group();
+            bPivot.position.set(0, cfg.y, 0);
+            bPivot.rotation.y = cfg.angle + seed;
+            bPivot.rotation.z = cfg.tilt;
+            tree.add(bPivot);
+
+            const limb = new THREE.Mesh(new THREE.CylinderGeometry(cfg.rTop, cfg.rBot, cfg.len, 10), sharedBarkMat);
+            limb.position.y = cfg.len * 0.5;
+            limb.castShadow = true;
+            bPivot.add(limb);
+
+            // Ranting kecil bercabang
+            const twig = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.11, 1.0, 8), sharedBarkMat);
+            twig.position.set(0.22, cfg.len * 0.72, 0);
+            twig.rotation.z = -0.55;
+            twig.castShadow = true;
+            bPivot.add(twig);
+
+            // Gugusan dedaun padat berlapis (gaya brokoli/realistik) di hujung setiap dahan
+            const clusterMain = new THREE.Mesh(
+                getCanopyClusterGeo(idx % 3),
+                sharedLeafMaterials[idx % sharedLeafMaterials.length]
+            );
+            clusterMain.scale.set(1.45, 1.15, 1.45);
+            clusterMain.position.set(0, cfg.len + 0.35, 0);
+            clusterMain.castShadow = true;
+            clusterMain.receiveShadow = true;
+            bPivot.add(clusterMain);
+
+            const clusterSub = new THREE.Mesh(
+                getCanopyClusterGeo((idx + 1) % 3),
+                sharedLeafMaterials[(idx + 2) % sharedLeafMaterials.length]
+            );
+            clusterSub.scale.set(1.1, 0.9, 1.1);
+            clusterSub.position.set(0.55, cfg.len + 0.15, 0.35);
+            clusterSub.castShadow = true;
+            clusterSub.receiveShadow = true;
+            bPivot.add(clusterSub);
+        });
+
+        // Mahkota dedaun puncak tengah
+        const crownTop = new THREE.Mesh(getCanopyClusterGeo(0), sharedLeafMaterials[2]);
+        crownTop.scale.set(1.75, 1.35, 1.75);
+        crownTop.position.set(0, 4.65, 0);
+        crownTop.castShadow = true;
+        crownTop.receiveShadow = true;
+        tree.add(crownTop);
+
+        tree.scale.setScalar(scale);
+        return tree;
+    }
+
+    function createRealisticPalmTree(scale = 1.0, seed = 1) {
+        initSharedFoliageMaterials();
+        const palm = new THREE.Group();
+
+        // Batang bersegmen melengkung
+        const segments = 9;
+        let curX = 0;
+        let curY = 0;
+        let curZ = 0;
+        const bendDir = seed % 2 === 0 ? 1 : -1;
+
+        for (let s = 0; s < segments; s++) {
+            const rBot = 0.28 - s * 0.015;
+            const rTop = 0.25 - s * 0.015;
+            const segH = 0.62;
+            const seg = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, segH, 12), sharedBarkMat);
+            const tilt = (s * 0.045) * bendDir;
+            seg.position.set(curX, curY + segH * 0.5, curZ);
+            seg.rotation.z = tilt;
+            seg.castShadow = true;
+            seg.receiveShadow = true;
+            palm.add(seg);
+
+            curX -= Math.sin(tilt) * segH * 0.85;
+            curY += Math.cos(tilt) * segH * 0.96;
+        }
+
+        const crownGroup = new THREE.Group();
+        crownGroup.position.set(curX, curY, curZ);
+        palm.add(crownGroup);
+
+        // Buah kelapa di pangkal pelepah
+        const coconutMat = new THREE.MeshStandardMaterial({ color: 0x4d7c0f, roughness: 0.5 });
+        for (let c = 0; c < 5; c++) {
+            const ca = (c / 5) * Math.PI * 2;
+            const coco = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), coconutMat);
+            coco.position.set(Math.cos(ca) * 0.24, -0.1, Math.sin(ca) * 0.24);
+            coco.castShadow = true;
+            crownGroup.add(coco);
+        }
+
+        // Pelepah melentur realistik
+        const frondCount = 9;
+        for (let f = 0; f < frondCount; f++) {
+            const fPivot = new THREE.Group();
+            fPivot.rotation.y = (f / frondCount) * Math.PI * 2 + seed;
+            fPivot.rotation.z = 0.35 + (f % 3) * 0.14;
+            crownGroup.add(fPivot);
+
+            for (let p = 0; p < 6; p++) {
+                const leafBlade = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.45 - p * 0.04, 0.03, 0.55 - p * 0.06),
+                    sharedLeafMaterials[p % sharedLeafMaterials.length]
+                );
+                leafBlade.position.set(0.35 + p * 0.42, -p * p * 0.045, 0);
+                leafBlade.rotation.z = -p * 0.14;
+                leafBlade.castShadow = true;
+                fPivot.add(leafBlade);
+            }
+        }
+
+        palm.scale.setScalar(scale);
+        return palm;
+    }
+
+    // =========================================================================
+    // 7. ENJIN DUNIA 3D THREE.JS, KAMERA, PENCAHAYAAN & INTERAKSI
+    // =========================================================================
+    let scene, camera, renderer;
+    let playerRig = null;
+    const playerPhysics = {
+        x: 0,
+        y: 0,
+        z: 42,
+        vx: 0,
+        vy: 0,
+        vz: 0,
+        yaw: Math.PI, // Menghadap utara (-Z)
+        onGround: true,
+        walkTime: 0,
+        cheerTimer: 0
+    };
+
+    const cameraState = {
+        yaw: 0,
+        pitch: 0.28,
+        distance: 6.2
+    };
+
+    const keysPressed = {};
+    const interactiveEntities = []; // { id, type, label, pos, mesh, data }
+    const clickableMeshes = [];     // Mesh 3D yang boleh diklik terus
+    const barrierGates = {};        // gateId -> THREE.Group
+    const cloudList = [];
+    const fountainParticles = [];
+    const animatedMeshes = [];
+    let currentNearestEntity = null;
+    let clock = new THREE.Clock();
+
+    function createSkyGradientTexture() {
+        const c = document.createElement('canvas');
+        c.width = 32;
+        c.height = 256;
+        const ctx = c.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 0, 256);
+        grad.addColorStop(0.0, '#1e3a8a');
+        grad.addColorStop(0.38, '#3b82f6');
+        grad.addColorStop(0.68, '#93c5fd');
+        grad.addColorStop(1.0, '#fef3c7');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 32, 256);
+        return new THREE.CanvasTexture(c);
+    }
+
+    function createFloatingTextSprite(text, bgColor = 'rgba(15, 23, 42, 0.85)', textColor = '#fde047') {
+        const c = document.createElement('canvas');
+        c.width = 384;
+        c.height = 96;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(12, 12, 360, 72);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(12, 12, 360, 72);
+        ctx.fillStyle = textColor;
+        ctx.font = 'bold 34px Cairo, Fredoka, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, 192, 50);
+
+        const tex = new THREE.CanvasTexture(c);
+        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+        const sprite = new THREE.Sprite(mat);
+        sprite.scale.set(2.8, 0.7, 1);
+        return sprite;
+    }
+
+    function initThreeWorld() {
+        if (renderer) return;
+        const canvas = document.getElementById('game-canvas');
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.08;
+
+        scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0xdbeafe, 0.0055);
+
+        camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.15, 280);
+
+        // --- KUBAH LANGIT BERGRADIEN SINEMATIK (SELAMAT UNTUK SEMUA GPU) ---
+        const skyGeo = new THREE.SphereGeometry(190, 28, 20);
+        const skyMat = new THREE.MeshBasicMaterial({
+            map: createSkyGradientTexture(),
+            side: THREE.BackSide,
+            depthWrite: false
+        });
+        scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+        // --- PENCAHAYAAN SINEMATIK ---
+        const hemiLight = new THREE.HemisphereLight(0xf0f9ff, 0x78552b, 0.72);
+        hemiLight.position.set(0, 60, 0);
+        scene.add(hemiLight);
+
+        const sunLight = new THREE.DirectionalLight(0xfff7ed, 1.25);
+        sunLight.position.set(42, 68, 35);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 5;
+        sunLight.shadow.camera.far = 190;
+        const d = 75;
+        sunLight.shadow.camera.left = -d;
+        sunLight.shadow.camera.right = d;
+        sunLight.shadow.camera.top = d;
+        sunLight.shadow.camera.bottom = -d;
+        sunLight.shadow.bias = -0.0005;
+        scene.add(sunLight);
+
+        // --- AWAN 3D BERGERAK PERLAHAN ---
+        const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, metalness: 0 });
+        for (let c = 0; c < 16; c++) {
+            const cloud = new THREE.Group();
+            const puffs = 3 + (c % 3);
+            for (let p = 0; p < puffs; p++) {
+                const puff = new THREE.Mesh(new THREE.SphereGeometry(2.6 + (p % 2) * 1.1, 14, 14), cloudMat);
+                puff.scale.set(1.3, 0.75, 1.0);
+                puff.position.set(p * 2.4 - puffs, (p % 2) * 0.6, (p % 3) * 0.7);
+                cloud.add(puff);
+            }
+            cloud.position.set(-90 + Math.random() * 180, 28 + Math.random() * 12, -110 + Math.random() * 180);
+            scene.add(cloud);
+            cloudList.push({ mesh: cloud, speed: 0.6 + Math.random() * 0.6 });
+        }
+
+        buildWorldZones();
+        rebuildPlayerAvatar();
+        setupInputListeners();
+        window.addEventListener('resize', onWindowResize);
+    }
+
+    function buildWorldZones() {
+        const sandTex = createProceduralTexture('sand');
+        sandTex.repeat.set(16, 12);
+        const grassTex = createProceduralTexture('grass');
+        grassTex.repeat.set(18, 14);
+        const marbleTex = createProceduralTexture('marble');
+        marbleTex.repeat.set(14, 14);
+        const cobbleTex = createProceduralTexture('cobble');
+        cobbleTex.repeat.set(3, 42);
+
+        // 1. ZON KAMPUNG PERMULAAN (Z = +16 hingga +52)
+        const villageGround = new THREE.Mesh(
+            new THREE.PlaneGeometry(76, 38),
+            new THREE.MeshStandardMaterial({ map: sandTex, roughness: 0.9 })
+        );
+        villageGround.rotation.x = -Math.PI / 2;
+        villageGround.position.set(0, 0, 34);
+        villageGround.receiveShadow = true;
+        scene.add(villageGround);
+
+        // 2. ZON HUTAN AJAIB (Z = -22 hingga +16)
+        const forestGround = new THREE.Mesh(
+            new THREE.PlaneGeometry(80, 38),
+            new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.92 })
+        );
+        forestGround.rotation.x = -Math.PI / 2;
+        forestGround.position.set(0, 0.01, -3);
+        forestGround.receiveShadow = true;
+        scene.add(forestGround);
+
+        // 3. ZON ISTANA MISTERI & GELANGGANG RAJA (Z = -105 hingga -22)
+        const palaceGround = new THREE.Mesh(
+            new THREE.PlaneGeometry(80, 84),
+            new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.45, metalness: 0.08 })
+        );
+        palaceGround.rotation.x = -Math.PI / 2;
+        palaceGround.position.set(0, 0.02, -64);
+        palaceGround.receiveShadow = true;
+        scene.add(palaceGround);
+
+        // Laluan batu berturap (Cobblestone) menghubungkan semua zon
+        const mainPath = new THREE.Mesh(
+            new THREE.PlaneGeometry(6.5, 142),
+            new THREE.MeshStandardMaterial({ map: cobbleTex, roughness: 0.85 })
+        );
+        mainPath.rotation.x = -Math.PI / 2;
+        mainPath.position.set(0, 0.035, -24);
+        mainPath.receiveShadow = true;
+        scene.add(mainPath);
+
+        // --- AIR PANCUT TENGAH KAMPUNG ---
+        buildFountain(0, 31);
+
+        // --- RUMAH KAMPUNG TRADISIONAL ARAB ---
+        buildVillageHouse(-21, 38, Math.PI * 0.35);
+        buildVillageHouse(21, 39, -Math.PI * 0.35);
+        buildVillageHouse(-22, 24, Math.PI * 0.45);
+        buildVillageHouse(22, 23, -Math.PI * 0.45);
+
+        // --- POKOK KELAPA KAMPUNG ---
+        const palmCoords = [
+            [-16, 44, 0.95], [16, 43, 1.05], [-17, 29, 0.9], [17, 30, 1.0]
+        ];
+        palmCoords.forEach(([px, pz, sc], idx) => {
+            const pTree = createRealisticPalmTree(sc, idx + 1);
+            pTree.position.set(px, 0, pz);
+            scene.add(pTree);
+        });
+
+        // --- POKOK HUTAN REALISTIK (RUJUKAN GAMBAR 2) ---
+        const forestTreeCoords = [
+            [-18, 9, 1.15], [18, 8, 1.2], [-22, -2, 1.25], [22, -4, 1.15],
+            [-16, -13, 1.2], [17, -14, 1.18], [-8, -6, 0.95], [8, -5, 0.95],
+            [-27, 4, 1.3], [27, 3, 1.3], [-26, -15, 1.25], [26, -15, 1.25],
+            // Pokok di sempadan kampung & istana untuk suasana subur
+            [-26, 33, 1.1], [26, 33, 1.1], [-26, -38, 1.15], [26, -38, 1.15]
+        ];
+        forestTreeCoords.forEach(([tx, tz, sc], idx) => {
+            const rTree = createRealisticTree(sc, idx + 3);
+            rTree.position.set(tx, 0, tz);
+            scene.add(rTree);
+        });
+
+        // --- SENI BINA ISTANA MISTERI & ARENA RAJA ---
+        buildPalaceArchitecture();
+
+        // --- PINTU GERBANG HALANGAN ANTARA ZON ---
+        barrierGates[1] = buildBarrierGate(0, 15.5, 'Pintu Hutan Ajaib (Lulus Tahap 1)');
+        barrierGates[2] = buildBarrierGate(0, -22.5, 'Gerbang Istana Misteri (Lulus Tahap 2)');
+        barrierGates[3] = buildBarrierGate(0, -61.5, 'Singgahsana Raja Ilmu (Lulus Tahap 3)');
+
+        // --- WATAK NPC & OBJEK INTERAKTIF ---
+        populateNPCsAndItems();
+    }
+
+    function buildFountain(fx, fz) {
+        const fGroup = new THREE.Group();
+        fGroup.position.set(fx, 0, fz);
+
+        const stoneMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.45 });
+        const goldRimMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3, metalness: 0.6 });
+        const waterMat = new THREE.MeshStandardMaterial({
+            color: 0x38bdf8,
+            roughness: 0.15,
+            metalness: 0.2,
+            transparent: true,
+            opacity: 0.85
+        });
+
+        const basin = new THREE.Mesh(new THREE.CylinderGeometry(2.7, 3.0, 0.65, 24), stoneMat);
+        basin.position.y = 0.325;
+        basin.castShadow = true;
+        basin.receiveShadow = true;
+        fGroup.add(basin);
+
+        const rim = new THREE.Mesh(new THREE.TorusGeometry(2.7, 0.12, 12, 28), goldRimMat);
+        rim.rotation.x = Math.PI / 2;
+        rim.position.y = 0.66;
+        fGroup.add(rim);
+
+        const waterPool = new THREE.Mesh(new THREE.CylinderGeometry(2.55, 2.55, 0.08, 24), waterMat);
+        waterPool.position.y = 0.58;
+        fGroup.add(waterPool);
+
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.65, 1.7, 16), stoneMat);
+        pillar.position.y = 1.05;
+        pillar.castShadow = true;
+        fGroup.add(pillar);
+
+        const topBowl = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 0.4, 0.35, 20), goldRimMat);
+        topBowl.position.y = 1.85;
+        fGroup.add(topBowl);
+
+        // Butiran air bergerak
+        const dropGeo = new THREE.SphereGeometry(0.08, 8, 8);
+        for (let i = 0; i < 18; i++) {
+            const drop = new THREE.Mesh(dropGeo, waterMat);
+            fGroup.add(drop);
+            fountainParticles.push({
+                mesh: drop,
+                angle: (i / 18) * Math.PI * 2,
+                phase: i / 18
+            });
+        }
+
+        scene.add(fGroup);
+    }
+
+    function buildVillageHouse(hx, hz, rotY) {
+        const house = new THREE.Group();
+        house.position.set(hx, 0, hz);
+        house.rotation.y = rotY;
+
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.85 });
+        const trimMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.6 });
+        const domeMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.45 });
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(5.6, 4.0, 5.2), wallMat);
+        body.position.y = 2.0;
+        body.castShadow = true;
+        body.receiveShadow = true;
+        house.add(body);
+
+        const parapet = new THREE.Mesh(new THREE.BoxGeometry(5.9, 0.35, 5.5), trimMat);
+        parapet.position.y = 4.1;
+        house.add(parapet);
+
+        const dome = new THREE.Mesh(new THREE.SphereGeometry(1.75, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), domeMat);
+        dome.position.y = 4.2;
+        dome.castShadow = true;
+        house.add(dome);
+
+        const door = new THREE.Mesh(
+            new THREE.BoxGeometry(1.2, 2.2, 0.2),
+            new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 })
+        );
+        door.position.set(0, 1.1, 2.58);
+        house.add(door);
+
+        scene.add(house);
+    }
+
+    function buildPalaceArchitecture() {
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0xfefce8, roughness: 0.35 });
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.25, metalness: 0.7 });
+        const turquoiseMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.35 });
+
+        // Tiang-tiang marmar Istana Misteri
+        const pillarCoords = [
+            [-15, -28], [15, -28], [-15, -42], [15, -42], [-15, -56], [15, -56]
+        ];
+        pillarCoords.forEach(([px, pz]) => {
+            const col = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, 6.2, 18), pillarMat);
+            col.position.set(px, 3.1, pz);
+            col.castShadow = true;
+            col.receiveShadow = true;
+            scene.add(col);
+
+            const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.55, 0.5, 18), goldMat);
+            cap.position.set(px, 6.35, pz);
+            scene.add(cap);
+        });
+
+        // Astaka Kubah Diraja di bahagian utara (-84)
+        const pavilion = new THREE.Group();
+        pavilion.position.set(0, 0, -82);
+        scene.add(pavilion);
+
+        const dais = new THREE.Mesh(new THREE.CylinderGeometry(8.5, 9.2, 0.6, 32), pillarMat);
+        dais.position.y = 0.3;
+        dais.receiveShadow = true;
+        pavilion.add(dais);
+
+        const carpet = new THREE.Mesh(
+            new THREE.BoxGeometry(3.4, 0.08, 16),
+            new THREE.MeshStandardMaterial({ color: 0xbe123c, roughness: 0.7 })
+        );
+        carpet.position.set(0, 0.62, 3.5);
+        pavilion.add(carpet);
+
+        for (let i = 0; i < 6; i++) {
+            const ang = (i / 6) * Math.PI * 2 + 0.52;
+            const p = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, 6.8, 16), pillarMat);
+            p.position.set(Math.cos(ang) * 6.5, 3.8, Math.sin(ang) * 6.5);
+            p.castShadow = true;
+            pavilion.add(p);
+        }
+
+        const grandDome = new THREE.Mesh(
+            new THREE.SphereGeometry(6.8, 28, 20, 0, Math.PI * 2, 0, Math.PI * 0.52),
+            turquoiseMat
+        );
+        grandDome.position.y = 7.1;
+        grandDome.castShadow = true;
+        pavilion.add(grandDome);
+
+        const spire = new THREE.Mesh(new THREE.ConeGeometry(0.35, 2.2, 12), goldMat);
+        spire.position.y = 14.5;
+        pavilion.add(spire);
+    }
+
+    function buildBarrierGate(gx, gz, title) {
+        const gate = new THREE.Group();
+        gate.position.set(gx, 0, gz);
+
+        const postMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.35, metalness: 0.5 });
+        const barMat = new THREE.MeshStandardMaterial({
+            color: 0xf59e0b,
+            emissive: 0xb45309,
+            emissiveIntensity: 0.45,
+            transparent: true,
+            opacity: 0.82
+        });
+
+        const leftPost = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 4.6, 14), postMat);
+        leftPost.position.set(-4.2, 2.3, 0);
+        leftPost.castShadow = true;
+        const rightPost = leftPost.clone();
+        rightPost.position.x = 4.2;
+
+        const arch = new THREE.Mesh(new THREE.BoxGeometry(9.2, 0.55, 0.6), postMat);
+        arch.position.set(0, 4.6, 0);
+
+        const energyField = new THREE.Mesh(new THREE.BoxGeometry(7.8, 4.0, 0.25), barMat);
+        energyField.position.set(0, 2.1, 0);
+        energyField.name = 'barrierField';
+
+        gate.add(leftPost, rightPost, arch, energyField);
+        scene.add(gate);
+        return gate;
+    }
+
+    function createFloatingMarker(color = 0xfbbf24) {
+        const group = new THREE.Group();
+        const gem = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.36, 0),
+            new THREE.MeshStandardMaterial({
+                color,
+                emissive: color,
+                emissiveIntensity: 0.45,
+                roughness: 0.2,
+                metalness: 0.6
+            })
+        );
+        group.add(gem);
+        return group;
+    }
+
+    function populateNPCsAndItems() {
+        const registerClickable = (group, entity) => {
+            group.traverse((child) => {
+                if (child.isMesh) {
+                    child.userData.interactiveEntity = entity;
+                    clickableMeshes.push(child);
+                }
+            });
+        };
+
+        // 1. NPC: Ustaz Hakim (Kampung Permulaan)
+        const ustaz = createRealisticCharacter({
+            type: 'ustaz',
+            shirtColor: 0x047857,
+            pantsColor: 0xfefce8,
+            headwearColor: 0xffffff
+        });
+        ustaz.group.position.set(-3.8, 0, 38.5);
+        ustaz.group.rotation.y = 0.45;
+        scene.add(ustaz.group);
+        const ustazLabel = createFloatingTextSprite('👳‍♂️ Ustaz Hakim');
+        ustazLabel.position.set(-3.8, 2.55, 38.5);
+        scene.add(ustazLabel);
+        animatedMeshes.push({ mesh: ustazLabel, baseY: 2.55, spin: false });
+        const ustazEnt = {
+            id: 'npc_ustaz',
+            type: 'NPC',
+            npcId: 'ustaz',
+            label: 'Berbual dengan Ustaz Hakim',
+            pos: { x: -3.8, z: 38.5 },
+            mesh: ustaz.group
+        };
+        interactiveEntities.push(ustazEnt);
+        registerClickable(ustaz.group, ustazEnt);
+
+        // 2. NPC: Penjaga Hutan Safiyyah (Hutan Ajaib)
+        const ranger = createRealisticCharacter({
+            type: 'ranger',
+            shirtColor: 0x15803d,
+            pantsColor: 0xfef3c7,
+            headwearColor: 0x065f46
+        });
+        ranger.group.position.set(-3.8, 0, 11.5);
+        ranger.group.rotation.y = 0.35;
+        scene.add(ranger.group);
+        const rangerLabel = createFloatingTextSprite('🧕 Penjaga Safiyyah');
+        rangerLabel.position.set(-3.8, 2.55, 11.5);
+        scene.add(rangerLabel);
+        animatedMeshes.push({ mesh: rangerLabel, baseY: 2.55, spin: false });
+        const rangerEnt = {
+            id: 'npc_ranger',
+            type: 'NPC',
+            npcId: 'ranger',
+            label: 'Berbual dengan Penjaga Hutan Safiyyah',
+            pos: { x: -3.8, z: 11.5 },
+            mesh: ranger.group
+        };
+        interactiveEntities.push(rangerEnt);
+        registerClickable(ranger.group, rangerEnt);
+
+        // 3. NPC: Wazir Faris (Istana Misteri)
+        const wazir = createRealisticCharacter({
+            type: 'wazir',
+            shirtColor: 0x1d4ed8,
+            pantsColor: 0xf8fafc,
+            headwearColor: 0xf59e0b
+        });
+        wazir.group.position.set(-3.8, 0, -26.5);
+        wazir.group.rotation.y = 0.35;
+        scene.add(wazir.group);
+        const wazirLabel = createFloatingTextSprite('🧔‍♂️ Wazir Faris');
+        wazirLabel.position.set(-3.8, 2.55, -26.5);
+        scene.add(wazirLabel);
+        animatedMeshes.push({ mesh: wazirLabel, baseY: 2.55, spin: false });
+        const wazirEnt = {
+            id: 'npc_wazir',
+            type: 'NPC',
+            npcId: 'wazir',
+            label: 'Berbual dengan Wazir Faris',
+            pos: { x: -3.8, z: -26.5 },
+            mesh: wazir.group
+        };
+        interactiveEntities.push(wazirEnt);
+        registerClickable(wazir.group, wazirEnt);
+
+        // 4. NPC: Raja Penjaga Ilmu Sultan Harun (Gelanggang Raja)
+        const king = createRealisticCharacter({
+            type: 'king',
+            shirtColor: 0x991b1b,
+            pantsColor: 0xfefce8,
+            headwearColor: 0xfbbf24
+        });
+        king.group.scale.setScalar(1.18);
+        king.group.position.set(0, 0.6, -79);
+        scene.add(king.group);
+        const kingLabel = createFloatingTextSprite('👑 Sultan Harun');
+        kingLabel.position.set(0, 3.55, -79);
+        scene.add(kingLabel);
+        animatedMeshes.push({ mesh: kingLabel, baseY: 3.55, spin: false });
+        const kingEnt = {
+            id: 'npc_king',
+            type: 'NPC',
+            npcId: 'king',
+            label: 'Cabar Raja Penjaga Ilmu (Sultan Harun)',
+            pos: { x: 0, z: -79 },
+            mesh: king.group
+        };
+        interactiveEntities.push(kingEnt);
+        registerClickable(king.group, kingEnt);
+
+        // 5. Objek Tahap 1 (5 Objek Arab di Kampung)
+        STAGE1_OBJECTS.forEach((obj) => {
+            const pedestal = new THREE.Group();
+            pedestal.position.set(obj.pos.x, 0, obj.pos.z);
+
+            const table = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.75, 0.85, 0.9, 16),
+                new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.7 })
+            );
+            table.position.y = 0.45;
+            table.castShadow = true;
+            pedestal.add(table);
+
+            const orb = new THREE.Mesh(
+                new THREE.DodecahedronGeometry(0.45, 0),
+                new THREE.MeshStandardMaterial({
+                    color: 0x3b82f6,
+                    emissive: 0x1d4ed8,
+                    emissiveIntensity: 0.45,
+                    roughness: 0.2
+                })
+            );
+            orb.position.y = 1.45;
+            orb.castShadow = true;
+            pedestal.add(orb);
+
+            const wordTag = createFloatingTextSprite(`${obj.icon} ${obj.arabic}`, 'rgba(30, 58, 138, 0.88)', '#ffffff');
+            wordTag.position.y = 2.3;
+            pedestal.add(wordTag);
+
+            scene.add(pedestal);
+            animatedMeshes.push({ mesh: orb, baseY: 1.45, spin: true });
+
+            const s1Ent = {
+                id: obj.id,
+                type: 'STAGE1_OBJ',
+                label: `Periksa Objek: ${obj.arabic}`,
+                pos: obj.pos,
+                mesh: pedestal,
+                orbMesh: orb,
+                data: obj
+            };
+            interactiveEntities.push(s1Ent);
+            registerClickable(pedestal, s1Ent);
+        });
+
+        // 6. Kad Hikmah Tahap 2 (5 Kad Tersembunyi di Hutan Ajaib)
+        STAGE2_CARDS.forEach((card) => {
+            const cardGroup = new THREE.Group();
+            cardGroup.position.set(card.pos.x, 0, card.pos.z);
+
+            const cardMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(0.75, 1.05, 0.12),
+                new THREE.MeshStandardMaterial({
+                    color: 0x10b981,
+                    emissive: 0x059669,
+                    emissiveIntensity: 0.5,
+                    roughness: 0.25
+                })
+            );
+            cardMesh.position.y = 1.3;
+            cardMesh.castShadow = true;
+            cardGroup.add(cardMesh);
+
+            const cardTag = createFloatingTextSprite(`✨ ${card.arabic}`, 'rgba(6, 78, 59, 0.88)', '#a7f3d0');
+            cardTag.position.y = 2.25;
+            cardGroup.add(cardTag);
+
+            scene.add(cardGroup);
+            animatedMeshes.push({ mesh: cardMesh, baseY: 1.3, spin: true });
+
+            const s2Ent = {
+                id: card.id,
+                type: 'STAGE2_CARD',
+                label: `Kumpul Kad Hikmah: ${card.arabic}`,
+                pos: card.pos,
+                mesh: cardGroup,
+                data: card
+            };
+            interactiveEntities.push(s2Ent);
+            registerClickable(cardGroup, s2Ent);
+        });
+
+        // 7. Podium Teka-Teki Ayat Tahap 3 (5 Podium di Istana Misteri)
+        STAGE3_SENTENCES.forEach((sent, idx) => {
+            const podGroup = new THREE.Group();
+            podGroup.position.set(sent.pos.x, 0, sent.pos.z);
+
+            const base = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.65, 0.85, 1.15, 16),
+                new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.35 })
+            );
+            base.position.y = 0.575;
+            base.castShadow = true;
+            podGroup.add(base);
+
+            const crystal = new THREE.Mesh(
+                new THREE.OctahedronGeometry(0.45, 0),
+                new THREE.MeshStandardMaterial({
+                    color: 0x8b5cf6,
+                    emissive: 0x6d28d9,
+                    emissiveIntensity: 0.5,
+                    roughness: 0.15
+                })
+            );
+            crystal.position.y = 1.65;
+            crystal.castShadow = true;
+            podGroup.add(crystal);
+
+            const podTag = createFloatingTextSprite(`📜 Teka-Teki #${idx + 1}`, 'rgba(76, 29, 149, 0.88)', '#ede9fe');
+            podTag.position.y = 2.45;
+            podGroup.add(podTag);
+
+            scene.add(podGroup);
+            animatedMeshes.push({ mesh: crystal, baseY: 1.65, spin: true });
+
+            const s3Ent = {
+                id: sent.id,
+                type: 'STAGE3_SENT',
+                label: `Selesaikan Teka-Teki Ayat #${idx + 1}`,
+                pos: sent.pos,
+                mesh: podGroup,
+                orbMesh: crystal,
+                data: sent
+            };
+            interactiveEntities.push(s3Ent);
+            registerClickable(podGroup, s3Ent);
+        });
+    }
+
+    // =========================================================================
+    // 8. PEMBINAAN SEMULA AVATAR PEMAIN, MOD PERANTI & KAWALAN INPUT
+    // =========================================================================
+    function rebuildPlayerAvatar() {
+        if (!scene) return;
+        if (playerRig && playerRig.group) {
+            scene.remove(playerRig.group);
+        }
+
+        const isGirl = gameState.heroId === 'girl';
+        playerRig = createRealisticCharacter({
+            type: isGirl ? 'girl' : 'boy',
+            shirtColor: isGirl ? 0xe11d48 : 0x2563eb,
+            pantsColor: isGirl ? 0xfefce8 : 0xf8fafc,
+            headwearColor: isGirl ? 0xfb7185 : 0x1d4ed8
+        });
+
+        playerRig.group.position.set(playerPhysics.x, playerPhysics.y, playerPhysics.z);
+        playerRig.group.rotation.y = playerPhysics.yaw;
+        scene.add(playerRig.group);
+    }
+
+    function detectInitialDeviceMode() {
+        const w = window.innerWidth;
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (isTouch && w < 640) return 'TELEFON';
+        if (isTouch && w <= 1024) return 'TABLET';
+        if (w <= 1366) return 'LAPTOP';
+        return 'PC';
+    }
+
+    function selectDeviceMode(mode) {
+        gameState.deviceMode = mode;
+
+        const btnMap = {
+            TELEFON: 'btn-dev-telefon',
+            TABLET: 'btn-dev-tablet',
+            LAPTOP: 'btn-dev-laptop',
+            PC: 'btn-dev-pc'
+        };
+
+        Object.entries(btnMap).forEach(([key, btnId]) => {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            if (key === mode) {
+                btn.className = 'p-2.5 rounded-xl border-4 border-amber-500 bg-amber-100 text-center transition flex flex-col items-center justify-center shadow-sm';
+            } else {
+                btn.className = 'p-2.5 rounded-xl border-2 border-slate-300 bg-white text-center transition flex flex-col items-center justify-center';
+            }
+        });
+
+        const summaries = {
+            TELEFON: 'Mod Telefon: Pad sentuh padat di skrin untuk pergerakan mudah alih.',
+            TABLET: 'Mod Tablet: Butang sentuh skrin luas & zon seret kamera di bahagian bawah.',
+            LAPTOP: 'Mod Laptop: Sokongan papan kekunci WASD + pad sesentuh / tetikus.',
+            PC: 'Mod PC: Paparan penuh tanpa butang sentuh skrin, kawalan WASD + Tetikus.'
+        };
+        const summaryEl = document.getElementById('device-mode-summary');
+        if (summaryEl) summaryEl.textContent = summaries[mode];
+
+        applyDeviceModeHUD();
+    }
+
+    function applyDeviceModeHUD() {
+        const mode = gameState.deviceMode;
+        const iconMap = { TELEFON: '📱', TABLET: '📟', LAPTOP: '💻', PC: '🖥️' };
+        const labelMap = { TELEFON: 'Telefon', TABLET: 'Tablet', LAPTOP: 'Laptop', PC: 'PC' };
+
+        const iconEl = document.getElementById('dev-mode-icon');
+        const labelEl = document.getElementById('dev-mode-label');
+        if (iconEl) iconEl.textContent = iconMap[mode];
+        if (labelEl) labelEl.textContent = labelMap[mode];
+
+        const touchBox = document.getElementById('touch-controls-container');
+        if (touchBox) {
+            if (mode === 'TELEFON' || mode === 'TABLET') {
+                touchBox.classList.remove('hidden');
+                touchBox.classList.add('flex');
+            } else {
+                touchBox.classList.add('hidden');
+                touchBox.classList.remove('flex');
+            }
+        }
+    }
+
+    function cycleDeviceMode() {
+        const order = ['TELEFON', 'TABLET', 'LAPTOP', 'PC'];
+        const next = order[(order.indexOf(gameState.deviceMode) + 1) % order.length];
+        selectDeviceMode(next);
+        showToast(`Mod Peranti ditukar kepada: ${next}`);
+    }
+
+    function selectCameraMode(mode) {
+        gameState.cameraMode = mode;
+        const btnTpp = document.getElementById('btn-mode-tpp');
+        const btnFpp = document.getElementById('btn-mode-fpp');
+        if (btnTpp && btnFpp) {
+            if (mode === 'TPP') {
+                btnTpp.className = 'p-2.5 sm:p-3 rounded-xl border-4 border-amber-500 bg-amber-100 text-left transition flex items-center gap-2';
+                btnFpp.className = 'p-2.5 sm:p-3 rounded-xl border-2 border-slate-300 bg-white text-left transition flex items-center gap-2';
+            } else {
+                btnFpp.className = 'p-2.5 sm:p-3 rounded-xl border-4 border-amber-500 bg-amber-100 text-left transition flex items-center gap-2';
+                btnTpp.className = 'p-2.5 sm:p-3 rounded-xl border-2 border-slate-300 bg-white text-left transition flex items-center gap-2';
+            }
+        }
+        const camIcon = document.getElementById('cam-mode-icon');
+        const camLabel = document.getElementById('cam-mode-label');
+        if (camIcon) camIcon.textContent = mode === 'TPP' ? '🧍' : '👁️';
+        if (camLabel) camLabel.textContent = mode;
+    }
+
+    function toggleCameraPerspective() {
+        const next = gameState.cameraMode === 'TPP' ? 'FPP' : 'TPP';
+        selectCameraMode(next);
+        showToast(next === 'FPP' ? 'Mod FPP (Pandangan Orang Pertama) 👁️' : 'Mod TPP (Pandangan Orang Ketiga) 🧍');
+    }
+
+    function setTouchKey(code, state) {
+        keysPressed[code] = state;
+    }
+
+    function triggerJump() {
+        if (!gameState.started || isAnyModalOpen()) return;
+        if (playerPhysics.onGround) {
+            playerPhysics.vy = 7.4;
+            playerPhysics.onGround = false;
+            playSound('jump');
+        }
+    }
+
+    function setupInputListeners() {
+        window.addEventListener('keydown', (e) => {
+            keysPressed[e.code] = true;
+            if (!gameState.started) return;
+
+            if (e.code === 'Space') {
+                if (!isAnyModalOpen()) {
+                    e.preventDefault();
+                    triggerJump();
+                }
+            } else if (e.code === 'KeyE') {
+                if (!isAnyModalOpen()) triggerInteraction();
+            } else if (e.code === 'KeyV') {
+                if (!isAnyModalOpen()) toggleCameraPerspective();
+            } else if (e.code === 'KeyM') {
+                const wm = document.getElementById('modal-worldmap');
+                if (wm.classList.contains('hidden')) openWorldMap();
+                else closeWorldMap();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keysPressed[e.code] = false;
+        });
+
+        // Seret tetikus / sentuh kanvas untuk pusing kamera & klik objek 3D
+        const canvas = document.getElementById('game-canvas');
+        const raycaster = new THREE.Raycaster();
+        const pointerNDC = new THREE.Vector2();
+        let isDragging = false;
+        let downX = 0;
+        let downY = 0;
+        let lastX = 0;
+        let lastY = 0;
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if (!gameState.started || isAnyModalOpen()) return;
+            isDragging = true;
+            downX = lastX = e.clientX;
+            downY = lastY = e.clientY;
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            cameraState.yaw -= dx * 0.0065;
+            cameraState.pitch = Math.max(-0.25, Math.min(0.85, cameraState.pitch + dy * 0.005));
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (isDragging && gameState.started && !isAnyModalOpen()) {
+                const moved = Math.hypot(e.clientX - downX, e.clientY - downY);
+                if (moved < 7) {
+                    pointerNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+                    pointerNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                    raycaster.setFromCamera(pointerNDC, camera);
+                    const hits = raycaster.intersectObjects(clickableMeshes, false);
+                    if (hits.length > 0 && hits[0].object.userData.interactiveEntity) {
+                        const clickedEnt = hits[0].object.userData.interactiveEntity;
+                        const dist = Math.hypot(playerPhysics.x - clickedEnt.pos.x, playerPhysics.z - clickedEnt.pos.z);
+                        if (dist <= 9.5) {
+                            currentNearestEntity = clickedEnt;
+                            triggerInteraction();
+                        } else {
+                            showToast('Dekati objek atau watak itu terlebih dahulu! 🏃');
+                        }
+                    }
+                }
+            }
+            isDragging = false;
+        });
+
+        // Elakkan butang UI merampas fokus kekunci Spacebar
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.closest('button')) {
+                e.target.closest('button').blur();
+            }
+        });
+
+        // Zon seret kamera khas pada kawalan sentuh mudah alih
+        const lookZone = document.getElementById('touch-look-zone');
+        let lookTouchId = null;
+        let lookLastX = 0;
+        let lookLastY = 0;
+
+        lookZone.addEventListener('touchstart', (e) => {
+            if (e.changedTouches.length > 0) {
+                const t = e.changedTouches[0];
+                lookTouchId = t.identifier;
+                lookLastX = t.clientX;
+                lookLastY = t.clientY;
+            }
+        }, { passive: true });
+
+        lookZone.addEventListener('touchmove', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === lookTouchId) {
+                    const dx = t.clientX - lookLastX;
+                    const dy = t.clientY - lookLastY;
+                    lookLastX = t.clientX;
+                    lookLastY = t.clientY;
+                    cameraState.yaw -= dx * 0.009;
+                    cameraState.pitch = Math.max(-0.25, Math.min(0.85, cameraState.pitch + dy * 0.007));
+                }
+            }
+        }, { passive: true });
+
+        lookZone.addEventListener('touchend', () => {
+            lookTouchId = null;
+        }, { passive: true });
+    }
+
+    function onWindowResize() {
+        if (!renderer || !camera) return;
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // =========================================================================
+    // 9. FIZIK PERGERAKAN, PERLANGGARAN PINTU ZON & ANIMASI WATAK
+    // =========================================================================
+    function updatePlayerAndCamera(dt) {
+        if (!playerRig) return;
+
+        // Input pergerakan
+        let moveForward = 0;
+        let moveRight = 0;
+        if (!isAnyModalOpen() && gameState.started) {
+            if (keysPressed['KeyW'] || keysPressed['ArrowUp']) moveForward += 1;
+            if (keysPressed['KeyS'] || keysPressed['ArrowDown']) moveForward -= 1;
+            if (keysPressed['KeyD'] || keysPressed['ArrowRight']) moveRight += 1;
+            if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) moveRight -= 1;
+        }
+
+        const speed = 9.2;
+        const forwardVec = new THREE.Vector3(-Math.sin(cameraState.yaw), 0, -Math.cos(cameraState.yaw));
+        const rightVec = new THREE.Vector3(Math.cos(cameraState.yaw), 0, -Math.sin(cameraState.yaw));
+
+        const wishDir = new THREE.Vector3()
+            .addScaledVector(forwardVec, moveForward)
+            .addScaledVector(rightVec, moveRight);
+
+        const isMoving = wishDir.lengthSq() > 0.001;
+        if (isMoving) {
+            wishDir.normalize();
+            playerPhysics.vx = wishDir.x * speed;
+            playerPhysics.vz = wishDir.z * speed;
+
+            // Pusing watak ke arah pergerakan (atau ikut kamera dalam FPP)
+            if (gameState.cameraMode === 'TPP') {
+                const targetYaw = Math.atan2(wishDir.x, wishDir.z);
+                let diff = targetYaw - playerPhysics.yaw;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                playerPhysics.yaw += diff * Math.min(1, dt * 12);
+            }
+        } else {
+            playerPhysics.vx *= Math.max(0, 1 - dt * 12);
+            playerPhysics.vz *= Math.max(0, 1 - dt * 12);
+        }
+
+        if (gameState.cameraMode === 'FPP') {
+            playerPhysics.yaw = cameraState.yaw + Math.PI;
+        }
+
+        // Graviti & lompatan
+        playerPhysics.vy -= 19.5 * dt;
+        let nextX = playerPhysics.x + playerPhysics.vx * dt;
+        let nextY = playerPhysics.y + playerPhysics.vy * dt;
+        let nextZ = playerPhysics.z + playerPhysics.vz * dt;
+
+        // Lantai & Pentas Raja (-82)
+        const distRoyalDais = Math.hypot(nextX - 0, nextZ - (-82));
+        const floorY = distRoyalDais < 8.4 ? 0.6 : 0.0;
+        if (nextY <= floorY) {
+            nextY = floorY;
+            playerPhysics.vy = 0;
+            playerPhysics.onGround = true;
+        }
+
+        // Sempadan dunia
+        nextX = Math.max(-32, Math.min(32, nextX));
+        nextZ = Math.max(-94, Math.min(48, nextZ));
+
+        // Halangan Pintu Zon jika tahap belum lulus
+        if (gameState.unlockedStage < 2 && nextZ < 16.4) nextZ = 16.4;
+        if (gameState.unlockedStage < 3 && nextZ < -21.6) nextZ = -21.6;
+        if (gameState.unlockedStage < 4 && nextZ < -60.6) nextZ = -60.6;
+
+        playerPhysics.x = nextX;
+        playerPhysics.y = nextY;
+        playerPhysics.z = nextZ;
+
+        playerRig.group.position.set(playerPhysics.x, playerPhysics.y, playerPhysics.z);
+        playerRig.group.rotation.y = playerPhysics.yaw;
+
+        // Animasi berjalan, melompat, dan bersorak
+        if (playerPhysics.cheerTimer > 0) {
+            playerPhysics.cheerTimer -= dt;
+            const wave = Math.sin(playerPhysics.cheerTimer * 14);
+            playerRig.leftArm.rotation.z = -2.6 + wave * 0.25;
+            playerRig.rightArm.rotation.z = 2.6 - wave * 0.25;
+            playerRig.torso.position.y = 1.08 + Math.abs(wave) * 0.08;
+        } else if (!playerPhysics.onGround) {
+            playerRig.leftArm.rotation.z = -0.6;
+            playerRig.rightArm.rotation.z = 0.6;
+            playerRig.leftLeg.rotation.x = 0.35;
+            playerRig.rightLeg.rotation.x = -0.25;
+        } else if (isMoving) {
+            playerPhysics.walkTime += dt * 11;
+            const swing = Math.sin(playerPhysics.walkTime) * 0.62;
+            playerRig.leftLeg.rotation.x = swing;
+            playerRig.rightLeg.rotation.x = -swing;
+            playerRig.leftArm.rotation.x = -swing * 0.85;
+            playerRig.rightArm.rotation.x = swing * 0.85;
+            playerRig.leftArm.rotation.z = 0;
+            playerRig.rightArm.rotation.z = 0;
+            playerRig.torso.position.y = 1.08 + Math.abs(Math.cos(playerPhysics.walkTime)) * 0.04;
+        } else {
+            playerRig.leftLeg.rotation.x *= 0.8;
+            playerRig.rightLeg.rotation.x *= 0.8;
+            playerRig.leftArm.rotation.x *= 0.8;
+            playerRig.rightArm.rotation.x *= 0.8;
+            playerRig.leftArm.rotation.z *= 0.8;
+            playerRig.rightArm.rotation.z *= 0.8;
+            playerRig.torso.position.y = 1.08;
+        }
+
+        // Kedudukan Kamera TPP vs FPP
+        if (gameState.cameraMode === 'FPP') {
+            playerRig.head.visible = false;
+            playerRig.torso.visible = false;
+            const eyeY = playerPhysics.y + 1.68;
+            camera.position.set(playerPhysics.x, eyeY, playerPhysics.z);
+            const lookTarget = new THREE.Vector3(
+                playerPhysics.x - Math.sin(cameraState.yaw) * 10,
+                eyeY - Math.sin(cameraState.pitch) * 6,
+                playerPhysics.z - Math.cos(cameraState.yaw) * 10
+            );
+            camera.lookAt(lookTarget);
+        } else {
+            playerRig.head.visible = true;
+            playerRig.torso.visible = true;
+            const targetCenter = new THREE.Vector3(playerPhysics.x, playerPhysics.y + 1.45, playerPhysics.z);
+            const horizDist = Math.cos(cameraState.pitch) * cameraState.distance;
+            const vertDist = Math.sin(cameraState.pitch) * cameraState.distance;
+            camera.position.set(
+                targetCenter.x + Math.sin(cameraState.yaw) * horizDist,
+                Math.max(0.6, targetCenter.y + vertDist),
+                targetCenter.z + Math.cos(cameraState.yaw) * horizDist
+            );
+            camera.lookAt(targetCenter);
+        }
+    }
+
+    function updateProximityInteraction() {
+        if (!gameState.started || isAnyModalOpen()) {
+            document.getElementById('interact-prompt').classList.add('hidden');
+            return;
+        }
+
+        let best = null;
+        let bestDist = 3.8;
+
+        for (const ent of interactiveEntities) {
+            if (ent.type === 'STAGE2_CARD' && gameState.s2Collected[ent.id]) continue;
+            const d = Math.hypot(playerPhysics.x - ent.pos.x, playerPhysics.z - ent.pos.z);
+            // Kutipan automatik apabila pemain berjalan merentasi Kad Hikmah Hutan Ajaib
+            if (ent.type === 'STAGE2_CARD' && d < 2.2) {
+                collectStage2Card(ent);
+                continue;
+            }
+            if (d < bestDist) {
+                bestDist = d;
+                best = ent;
+            }
+        }
+
+        currentNearestEntity = best;
+        const promptEl = document.getElementById('interact-prompt');
+        const textEl = document.getElementById('interact-prompt-text');
+        if (best) {
+            textEl.textContent = best.label;
+            promptEl.classList.remove('hidden');
+        } else {
+            promptEl.classList.add('hidden');
+        }
+    }
+
+    // =========================================================================
+    // 10. LOGIK INTERAKSI, DIALOG NPC, KUIZ & PENYUSUN KAD AJAIB
+    // =========================================================================
+    function triggerInteraction() {
+        if (!currentNearestEntity || isAnyModalOpen()) return;
+        const ent = currentNearestEntity;
+
+        if (ent.type === 'NPC') {
+            openNPCDialogue(ent.npcId);
+        } else if (ent.type === 'STAGE1_OBJ') {
+            openObjectOrSentenceQuiz('STAGE1', ent.data);
+        } else if (ent.type === 'STAGE2_CARD') {
+            collectStage2Card(ent);
+        } else if (ent.type === 'STAGE3_SENT') {
+            openObjectOrSentenceQuiz('STAGE3', ent.data);
+        }
+    }
+
+    function openNPCDialogue(npcId) {
+        const modal = document.getElementById('modal-dialogue');
+        const avatar = document.getElementById('dlg-avatar');
+        const nameEl = document.getElementById('dlg-name');
+        const arabEl = document.getElementById('dlg-arabic-title');
+        const roleEl = document.getElementById('dlg-role');
+        const bodyEl = document.getElementById('dlg-body');
+        const actEl = document.getElementById('dlg-actions');
+
+        actEl.innerHTML = '';
+
+        if (npcId === 'ustaz') {
+            avatar.textContent = '👳‍♂️';
+            nameEl.textContent = 'Ustaz Hakim';
+            arabEl.textContent = 'الْأُسْتَاذُ حَكِيمٌ';
+            roleEl.textContent = 'Penjaga Kampung Permulaan (Tahap 1)';
+            const doneCount = Object.keys(gameState.s1Answered).length;
+            const correctCount = Object.values(gameState.s1Answered).filter(Boolean).length;
+
+            if (gameState.s1Passed) {
+                bodyEl.innerHTML = `<p>Syabas wahai penuntut ilmu! Anda telah menjawab <strong>${correctCount}/5</strong> objek di Kampung Permulaan dan membuka laluan ke <strong>Hutan Ajaib</strong>.</p>`;
+            } else if (doneCount === 5 && correctCount < 2) {
+                bodyEl.innerHTML = `<p>Anda hanya mendapat <strong>${correctCount}/5</strong> betul. Syarat lulus ialah sekurang-kurangnya <strong>2/5 betul</strong>. Mari ulang semula cabaran Kampung Permulaan!</p>`;
+                const retryBtn = document.createElement('button');
+                retryBtn.className = 'btn-quest px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-sm';
+                retryBtn.textContent = 'Ulang Tahap 1 ↻';
+                retryBtn.onclick = () => {
+                    gameState.s1Answered = {};
+                    updateAllHUD();
+                    closeDialogue();
+                    showToast('Tahap 1 ditetapkan semula! Periksa semula 5 objek Arab.');
+                };
+                actEl.appendChild(retryBtn);
+            } else {
+                bodyEl.innerHTML = `
+                    <p>Assalamualaikum! Selamat datang ke <strong>Kampung Permulaan</strong>.</p>
+                    <p>Terdapat <strong>5 objek Arab</strong> bercahaya di sekitar kampung ini. Dekati setiap objek dan tentukan sama ada ia <strong class="text-blue-700">Isim (<span class="arabic-text">الِاسْمُ</span>)</strong> atau <strong class="text-rose-700">Fi‘il (<span class="arabic-text">الْفِعْلُ</span>)</strong>!</p>
+                `;
+            }
+        } else if (npcId === 'ranger') {
+            avatar.textContent = '🧕';
+            nameEl.textContent = 'Penjaga Hutan Safiyyah';
+            arabEl.textContent = 'حَارِسَةُ الْغَابَةِ';
+            roleEl.textContent = 'Penjaga Hutan Ajaib (Tahap 2)';
+            const colCount = Object.keys(gameState.s2Collected).length;
+
+            if (gameState.s2Passed) {
+                bodyEl.innerHTML = `<p>Hebat! Semua kad hikmah telah disusun dengan jayanya. Gerbang menuju <strong>Istana Misteri</strong> telah terbuka!</p>`;
+            } else if (colCount === 5) {
+                bodyEl.innerHTML = `<p>Anda telah mengumpulkan kesemua <strong>5 Kad Hikmah</strong>! Klik butang di bawah untuk menyusun kad ke dalam Peti Isim dan Peti Fi‘il.</p>`;
+                const sortBtn = document.createElement('button');
+                sortBtn.className = 'btn-quest px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-extrabold text-sm';
+                sortBtn.textContent = 'Buka Penyusun Kad Ajaib ✨';
+                sortBtn.onclick = () => {
+                    closeDialogue();
+                    openMagicSorter();
+                };
+                actEl.appendChild(sortBtn);
+            } else {
+                bodyEl.innerHTML = `
+                    <p>Selamat datang ke <strong>Hutan Ajaib</strong> yang rendang dan subur!</p>
+                    <p>Cari <strong>5 Kad Hikmah</strong> yang terapung di celah-celah pokok besar (${colCount}/5 ditemui), kemudian susunkan ke peti yang betul.</p>
+                `;
+            }
+        } else if (npcId === 'wazir') {
+            avatar.textContent = '🧔‍♂️';
+            nameEl.textContent = 'Wazir Faris';
+            arabEl.textContent = 'الْوَزِيرُ فَارِسٌ';
+            roleEl.textContent = 'Detektif Ayat Istana Misteri (Tahap 3)';
+            const doneCount = Object.keys(gameState.s3Answered).length;
+            const correctCount = Object.values(gameState.s3Answered).filter(Boolean).length;
+
+            if (gameState.s3Passed) {
+                bodyEl.innerHTML = `<p>Kebijaksanaan anda luar biasa! Pintu ke <strong>Singgahsana Raja Penjaga Ilmu</strong> kini terbuka luas.</p>`;
+            } else if (doneCount === 5 && correctCount < 2) {
+                bodyEl.innerHTML = `<p>Markah anda <strong>${correctCount}/5</strong>. Anda perlukan sekurang-kurangnya <strong>2/5 betul</strong> untuk melepasi Istana Misteri.</p>`;
+                const retryBtn = document.createElement('button');
+                retryBtn.className = 'btn-quest px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-sm';
+                retryBtn.textContent = 'Ulang Tahap 3 ↻';
+                retryBtn.onclick = () => {
+                    gameState.s3Answered = {};
+                    updateAllHUD();
+                    closeDialogue();
+                    showToast('Tahap 3 ditetapkan semula! Periksa 5 podium ayat.');
+                };
+                actEl.appendChild(retryBtn);
+            } else {
+                bodyEl.innerHTML = `
+                    <p>Selamat tiba di <strong>Istana Misteri</strong>!</p>
+                    <p>Periksa <strong>5 Podium Kristal</strong> di dewan istana. Baca ayat Arab dengan teliti dan kenal pasti jenis perkataan yang diuji.</p>
+                `;
+            }
+        } else if (npcId === 'king') {
+            avatar.textContent = '👑';
+            nameEl.textContent = 'Sultan Harun (Penjaga Ilmu)';
+            arabEl.textContent = 'سُلْطَانُ الْعِلْمِ';
+            roleEl.textContent = 'Raja Terakhir Kerajaan Yang Hilang (Tahap 4)';
+            bodyEl.innerHTML = `
+                <p>Selamat datang ke puncak kerajaan, wira muda!</p>
+                <p>Syahdan, hanya mereka yang mampu melepasi <strong>10 Ujian Diraja</strong> (<span class="arabic-text">الِاسْمُ وَالْفِعْلُ</span>) layak dinobatkan sebagai Juara Kerajaan Yang Hilang. Adakah anda bersedia?</p>
+            `;
+            const duelBtn = document.createElement('button');
+            duelBtn.className = 'btn-quest px-5 py-2.5 rounded-xl bg-rose-600 text-white font-extrabold text-sm';
+            duelBtn.textContent = '⚔️ Mula Pertarungan 10 Soalan!';
+            duelBtn.onclick = () => {
+                closeDialogue();
+                startBossBattle();
+            };
+            actEl.appendChild(duelBtn);
+        }
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn-quest px-5 py-2.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-sm';
+        closeBtn.textContent = 'Tutup';
+        closeBtn.onclick = closeDialogue;
+        actEl.appendChild(closeBtn);
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeDialogue() {
+        document.getElementById('modal-dialogue').classList.add('hidden');
+    }
+
+    // --- KUIZ TAHAP 1, TAHAP 3 & PERTARUNGAN RAJA TAHAP 4 ---
+    function openObjectOrSentenceQuiz(stageType, itemData) {
+        const answeredMap = stageType === 'STAGE1' ? gameState.s1Answered : gameState.s3Answered;
+        if (Object.prototype.hasOwnProperty.call(answeredMap, itemData.id)) {
+            showToast('Soalan ini telah dijawab (1 kali percubaan sahaja).');
+            return;
+        }
+
+        const totalDone = Object.keys(answeredMap).length + 1;
+        gameState.activeQuiz = {
+            mode: stageType,
+            item: itemData,
+            bossIdx: 0,
+            bossCorrect: 0,
+            answered: false
+        };
+
+        document.getElementById('boss-hp-container').classList.add('hidden');
+        document.getElementById('quiz-badge').textContent = stageType === 'STAGE1'
+            ? 'TAHAP 1 • OBJEK KAMPUNG'
+            : 'TAHAP 3 • DETEKTIF AYAT';
+        document.getElementById('quiz-progress-text').textContent = `Soalan ${totalDone} / 5`;
+
+        if (stageType === 'STAGE1') {
+            document.getElementById('quiz-context').textContent = 'Perhatikan perkataan Arab pada objek ini:';
+            document.getElementById('quiz-arabic-word').textContent = itemData.arabic;
+            document.getElementById('quiz-translit').textContent = `(${itemData.translit})`;
+            document.getElementById('quiz-question-text').innerHTML =
+                'Adakah perkataan ini tergolong dalam <span class="text-blue-600">Isim (Kata Nama)</span> atau <span class="text-rose-600">Fi‘il (Kata Kerja)</span>?';
+        } else {
+            document.getElementById('quiz-context').textContent = `Kenal pasti perkataan: [ ${itemData.highlight} ] dalam ayat:`;
+            document.getElementById('quiz-arabic-word').textContent = itemData.arabic;
+            document.getElementById('quiz-translit').textContent = itemData.translit;
+            document.getElementById('quiz-question-text').innerHTML =
+                `Apakah jenis perkataan <strong class="arabic-text text-xl text-indigo-700">${itemData.highlight}</strong> di dalam ayat tersebut?`;
+        }
+
+        resetQuizModalButtons();
+        document.getElementById('modal-quiz').classList.remove('hidden');
+    }
+
+    function startBossBattle() {
+        gameState.activeQuiz = {
+            mode: 'BOSS',
+            bossIdx: 0,
+            bossCorrect: 0,
+            answered: false
+        };
+        renderBossQuestion();
+        document.getElementById('modal-quiz').classList.remove('hidden');
+    }
+
+    function renderBossQuestion() {
+        const idx = gameState.activeQuiz.bossIdx;
+        const q = STAGE4_BOSS_QUESTIONS[idx];
+        const remainingHp = 10 - gameState.activeQuiz.bossCorrect;
+
+        document.getElementById('boss-hp-container').classList.remove('hidden');
+        document.getElementById('boss-hp-text').textContent = `Nyawa Raja: ${remainingHp} / 10`;
+        document.getElementById('boss-hp-bar').style.width = `${(remainingHp / 10) * 100}%`;
+
+        document.getElementById('quiz-badge').textContent = 'TAHAP 4 • PERTARUNGAN RAJA ILMU';
+        document.getElementById('quiz-progress-text').textContent = `Ujian ${idx + 1} / 10`;
+        document.getElementById('quiz-context').textContent = 'Sultan Harun menguji kebijaksanaan anda:';
+        document.getElementById('quiz-arabic-word').textContent = q.arabic;
+        document.getElementById('quiz-translit').textContent = `(${q.translit})`;
+        document.getElementById('quiz-question-text').innerHTML =
+            'Tentukan sama ada perkataan ini <span class="text-blue-600">Isim</span> atau <span class="text-rose-600">Fi‘il</span>!';
+
+        resetQuizModalButtons();
+    }
+
+    function resetQuizModalButtons() {
+        document.getElementById('btn-ans-isim').disabled = false;
+        document.getElementById('btn-ans-fiil').disabled = false;
+        const fb = document.getElementById('quiz-feedback');
+        fb.classList.add('hidden');
+        fb.innerHTML = '';
+        document.getElementById('btn-quiz-next').classList.add('hidden');
+    }
+
+    function submitQuizAnswer(choice) {
+        const aq = gameState.activeQuiz;
+        if (!aq || aq.answered) return;
+        aq.answered = true;
+
+        document.getElementById('btn-ans-isim').disabled = true;
+        document.getElementById('btn-ans-fiil').disabled = true;
+
+        const targetItem = aq.mode === 'BOSS' ? STAGE4_BOSS_QUESTIONS[aq.bossIdx] : aq.item;
+        const isCorrect = choice === targetItem.type;
+
+        const fb = document.getElementById('quiz-feedback');
+        fb.classList.remove('hidden');
+
+        if (isCorrect) {
+            playSound('correct');
+            gameState.score += aq.mode === 'BOSS' ? 150 : 100;
+            playerPhysics.cheerTimer = 1.4;
+            fb.className = 'rounded-2xl p-4 text-sm mb-4 border-2 bg-emerald-50 border-emerald-400 text-emerald-950';
+            fb.innerHTML = `<div class="font-extrabold text-emerald-700 mb-1">✅ TEPAT SEKALI! (+${aq.mode === 'BOSS' ? 150 : 100} Mata)</div><div>${targetItem.explanation}</div>`;
+        } else {
+            playSound('wrong');
+            fb.className = 'rounded-2xl p-4 text-sm mb-4 border-2 bg-rose-50 border-rose-400 text-rose-950';
+            fb.innerHTML = `<div class="font-extrabold text-rose-700 mb-1">❌ KURANG TEPAT (0 Mata — Percubaan Tunggal)</div><div>${targetItem.explanation}</div>`;
+        }
+
+        if (aq.mode === 'STAGE1') {
+            gameState.s1Answered[targetItem.id] = isCorrect;
+            markEntityCompleted(targetItem.id, isCorrect);
+            checkStage1Completion();
+        } else if (aq.mode === 'STAGE3') {
+            gameState.s3Answered[targetItem.id] = isCorrect;
+            markEntityCompleted(targetItem.id, isCorrect);
+            checkStage3Completion();
+        } else if (aq.mode === 'BOSS') {
+            if (isCorrect) aq.bossCorrect++;
+            const rem = 10 - aq.bossCorrect;
+            document.getElementById('boss-hp-text').textContent = `Nyawa Raja: ${rem} / 10`;
+            document.getElementById('boss-hp-bar').style.width = `${(rem / 10) * 100}%`;
+        }
+
+        updateAllHUD();
+        document.getElementById('btn-quiz-next').classList.remove('hidden');
+    }
+
+    function markEntityCompleted(id, isCorrect) {
+        const ent = interactiveEntities.find(e => e.id === id);
+        if (ent && ent.orbMesh) {
+            ent.orbMesh.material.color.setHex(isCorrect ? 0x10b981 : 0x64748b);
+            ent.orbMesh.material.emissive.setHex(isCorrect ? 0x059669 : 0x334155);
+        }
+    }
+
+    function closeOrNextQuiz() {
+        const aq = gameState.activeQuiz;
+        if (!aq) return;
+
+        if (aq.mode === 'BOSS') {
+            aq.bossIdx++;
+            if (aq.bossIdx < STAGE4_BOSS_QUESTIONS.length) {
+                aq.answered = false;
+                renderBossQuestion();
+                return;
+            } else {
+                document.getElementById('modal-quiz').classList.add('hidden');
+                finishBossBattle(aq.bossCorrect);
+                return;
+            }
+        }
+
+        document.getElementById('modal-quiz').classList.add('hidden');
+        gameState.activeQuiz = null;
+    }
+
+    function checkStage1Completion() {
+        const keys = Object.keys(gameState.s1Answered);
+        if (keys.length < 5) return;
+        const correct = Object.values(gameState.s1Answered).filter(Boolean).length;
+        if (correct >= 2 && !gameState.s1Passed) {
+            gameState.s1Passed = true;
+            gameState.unlockedStage = Math.max(gameState.unlockedStage, 2);
+            gameState.badges[0] = true;
+            gameState.stars += Math.min(3, Math.max(1, Math.ceil(correct * 0.6)));
+            unlockBarrierGate(1);
+            playSound('unlock');
+            showToast('🎉 Tahap 1 Lulus! Laluan ke Hutan Ajaib kini terbuka!');
+        } else if (correct < 2) {
+            showToast(`Anda mendapat ${correct}/5. Jumpa Ustaz Hakim untuk cuba semula!`);
+        }
+    }
+
+    // --- TAHAP 2: KUMPUL KAD & PENYUSUN KAD AJAIB ---
+    function collectStage2Card(ent) {
+        if (gameState.s2Collected[ent.id]) return;
+        gameState.s2Collected[ent.id] = true;
+        ent.mesh.visible = false;
+        playSound('pickup');
+        gameState.score += 50;
+
+        const count = Object.keys(gameState.s2Collected).length;
+        updateAllHUD();
+
+        if (count === 5) {
+            showToast('✨ Semua 5 Kad Hikmah ditemui! Membuka Penyusun Kad Ajaib...');
+            setTimeout(() => openMagicSorter(), 650);
+        } else {
+            showToast(`Kad Hikmah ditemui (${count}/5): ${ent.data.arabic}`);
+        }
+    }
+
+    function openMagicSorterIfReady() {
+        if (Object.keys(gameState.s2Collected).length === 5 && !gameState.s2Passed) {
+            openMagicSorter();
+        }
+    }
+
+    function openMagicSorter() {
+        gameState.activeSorterIdx = 0;
+        gameState.s2Sorted = {};
+        renderSorterCard();
+        document.getElementById('modal-sorter').classList.remove('hidden');
+    }
+
+    function renderSorterCard() {
+        const idx = gameState.activeSorterIdx;
+        const card = STAGE2_CARDS[idx];
+        document.getElementById('sorter-counter').textContent = `Kad ${idx + 1} / 5`;
+        document.getElementById('sorter-arabic').textContent = card.arabic;
+        document.getElementById('sorter-meaning').textContent = `(${card.translit})`;
+
+        document.getElementById('btn-sort-isim').disabled = false;
+        document.getElementById('btn-sort-fiil').disabled = false;
+        const fb = document.getElementById('sorter-feedback');
+        fb.classList.add('hidden');
+        document.getElementById('btn-sorter-next').classList.add('hidden');
+    }
+
+    function sortCurrentCard(bucket) {
+        const idx = gameState.activeSorterIdx;
+        const card = STAGE2_CARDS[idx];
+        if (Object.prototype.hasOwnProperty.call(gameState.s2Sorted, card.id)) return;
+
+        document.getElementById('btn-sort-isim').disabled = true;
+        document.getElementById('btn-sort-fiil').disabled = true;
+
+        const isCorrect = bucket === card.type;
+        gameState.s2Sorted[card.id] = isCorrect;
+
+        const fb = document.getElementById('sorter-feedback');
+        fb.classList.remove('hidden');
+
+        if (isCorrect) {
+            playSound('correct');
+            gameState.score += 100;
+            fb.className = 'rounded-2xl p-3.5 text-xs sm:text-sm mb-3 border-2 bg-emerald-50 border-emerald-400 text-emerald-950';
+            fb.innerHTML = `<strong>✅ Betul!</strong> ${card.explanation}`;
+        } else {
+            playSound('wrong');
+            fb.className = 'rounded-2xl p-3.5 text-xs sm:text-sm mb-3 border-2 bg-rose-50 border-rose-400 text-rose-950';
+            fb.innerHTML = `<strong>❌ Salah Peti (0 Mata):</strong> ${card.explanation}`;
+        }
+
+        updateAllHUD();
+        const nextBtn = document.getElementById('btn-sorter-next');
+        nextBtn.textContent = idx < 4 ? 'KAD SETERUSNYA ➔' : 'SELESAIKAN SUSUNAN ✨';
+        nextBtn.classList.remove('hidden');
+    }
+
+    function nextSorterCard() {
+        if (gameState.activeSorterIdx < 4) {
+            gameState.activeSorterIdx++;
+            renderSorterCard();
+        } else {
+            document.getElementById('modal-sorter').classList.add('hidden');
+            const correct = Object.values(gameState.s2Sorted).filter(Boolean).length;
+            if (correct >= 2) {
+                gameState.s2Passed = true;
+                gameState.unlockedStage = Math.max(gameState.unlockedStage, 3);
+                gameState.badges[1] = true;
+                gameState.stars += Math.min(3, Math.max(1, Math.ceil(correct * 0.6)));
+                unlockBarrierGate(2);
+                playSound('unlock');
+                playerPhysics.cheerTimer = 1.6;
+                showToast(`🎉 Tahap 2 Lulus (${correct}/5)! Gerbang Istana Misteri dibuka!`);
+            } else {
+                showToast(`Anda mendapat ${correct}/5. Cuba susun semula kad untuk lulus (minima 2/5)!`);
+            }
+            updateAllHUD();
+        }
+    }
+
+    function checkStage3Completion() {
+        const keys = Object.keys(gameState.s3Answered);
+        if (keys.length < 5) return;
+        const correct = Object.values(gameState.s3Answered).filter(Boolean).length;
+        if (correct >= 2 && !gameState.s3Passed) {
+            gameState.s3Passed = true;
+            gameState.unlockedStage = Math.max(gameState.unlockedStage, 4);
+            gameState.badges[2] = true;
+            gameState.stars += Math.min(3, Math.max(1, Math.ceil(correct * 0.6)));
+            unlockBarrierGate(3);
+            playSound('unlock');
+            showToast('🎉 Tahap 3 Lulus! Singgahsana Raja Penjaga Ilmu kini terbuka!');
+        } else if (correct < 2) {
+            showToast(`Anda mendapat ${correct}/5. Jumpa Wazir Faris untuk ulang semula!`);
+        }
+    }
+
+    function finishBossBattle(bossCorrect) {
+        if (bossCorrect >= 5) {
+            gameState.s4Completed = true;
+            gameState.badges[3] = true;
+            gameState.stars = Math.min(12, gameState.stars + 3);
+            playSound('unlock');
+            playerPhysics.cheerTimer = 3.0;
+            updateAllHUD();
+
+            document.getElementById('victory-score').textContent = gameState.score;
+            document.getElementById('victory-stars').textContent = `${gameState.stars} / 12 ⭐`;
+            document.getElementById('modal-victory').classList.remove('hidden');
+        } else {
+            showToast(`Anda menjawab ${bossCorrect}/10. Dapatkan sekurang-kurangnya 5/10 untuk menewaskan Penjaga Ilmu!`);
+        }
+    }
+
+    function unlockBarrierGate(gateNum) {
+        const gate = barrierGates[gateNum];
+        if (!gate) return;
+        const field = gate.getObjectByName('barrierField');
+        if (field) field.visible = false;
+    }
+
+    // =========================================================================
+    // 11. KEMASKINI UI, MINIMAP & PETA DUNIA
+    // =========================================================================
+    function updateAllHUD() {
+        const hero = HERO_OPTIONS.find(h => h.id === gameState.heroId) || HERO_OPTIONS[0];
+        document.getElementById('hud-avatar').textContent = hero.avatar;
+        document.getElementById('hud-player-name').textContent = hero.name;
+        document.getElementById('hud-score').textContent = gameState.score;
+        document.getElementById('hud-stars').textContent = gameState.stars;
+
+        for (let b = 0; b < 4; b++) {
+            const slot = document.getElementById(`badge-slot-${b + 1}`);
+            if (gameState.badges[b]) {
+                slot.classList.remove('opacity-40', 'bg-slate-800', 'border-slate-600');
+                slot.classList.add('bg-amber-400', 'border-white', 'scale-110');
+            } else {
+                slot.classList.add('opacity-40', 'bg-slate-800', 'border-slate-600');
+                slot.classList.remove('bg-amber-400', 'border-white', 'scale-110');
+            }
+        }
+
+        // Garis masa tahap
+        const stageLabels = ['1. Kampung', '2. Hutan', '3. Istana', '4. Raja'];
+        for (let s = 1; s <= 4; s++) {
+            const el = document.getElementById(`timeline-${s}`);
+            if (!el) continue;
+            if (s <= gameState.unlockedStage) {
+                el.className = 'flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500 text-slate-950';
+                el.innerHTML = `<span>${stageLabels[s - 1]}</span>`;
+            } else {
+                el.className = 'flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-800 text-slate-400';
+                el.innerHTML = `<span>🔒 ${stageLabels[s - 1]}</span>`;
+            }
+        }
+
+        // Butang susun kad pantas di HUD jika 5 kad telah dikutip
+        const sorterBtn = document.getElementById('btn-hud-sorter');
+        if (Object.keys(gameState.s2Collected).length === 5 && !gameState.s2Passed) {
+            sorterBtn.classList.remove('hidden');
+        } else {
+            sorterBtn.classList.add('hidden');
+        }
+
+        // Misi semasa
+        let mTitle = 'TAHAP 1: PEMBURU PERKATAAN';
+        let mDesc = 'Cari & periksa 5 objek Arab di Kampung Permulaan!';
+        let mCount = `${Object.keys(gameState.s1Answered).length} / 5`;
+
+        if (gameState.unlockedStage === 2) {
+            mTitle = 'TAHAP 2: HUTAN AJAIB';
+            const col = Object.keys(gameState.s2Collected).length;
+            mDesc = col < 5 ? 'Kumpul 5 Kad Hikmah tersembunyi di hutan!' : 'Susun 5 Kad Hikmah ke dalam peti Isim & Fi‘il!';
+            mCount = `${col} / 5`;
+        } else if (gameState.unlockedStage === 3) {
+            mTitle = 'TAHAP 3: DETEKTIF AYAT ISTANA';
+            mDesc = 'Selesaikan 5 teka-teki ayat Arab di Istana Misteri!';
+            mCount = `${Object.keys(gameState.s3Answered).length} / 5`;
+        } else if (gameState.unlockedStage === 4) {
+            mTitle = 'TAHAP 4: RAJA PENJAGA ILMU';
+            mDesc = 'Bersemuka dengan Sultan Harun di Singgahsana!';
+            mCount = gameState.s4Completed ? 'SELESAI' : '10 Ujian';
+        }
+
+        document.getElementById('hud-mission-title').textContent = mTitle;
+        document.getElementById('hud-mission-desc').textContent = mDesc;
+        document.getElementById('hud-mission-counter').textContent = mCount;
+        document.getElementById('hud-mission-title-mobile').textContent = mTitle;
+        document.getElementById('hud-mission-desc-mobile').textContent = mDesc;
+        document.getElementById('hud-mission-counter-mobile').textContent = mCount;
+    }
+
+    function renderMinimap() {
+        const canvas = document.getElementById('minimap-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Latar zon
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, w, h);
+
+        // Istana (Utara)
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(8, 6, w - 16, 38);
+        // Hutan (Tengah)
+        ctx.fillStyle = '#14532d';
+        ctx.fillRect(8, 44, w - 16, 32);
+        // Kampung (Selatan)
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(8, 76, w - 16, 34);
+
+        // Laluan tengah
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(w / 2 - 4, 6, 8, h - 12);
+
+        const toMapX = (wx) => ((wx + 35) / 70) * (w - 16) + 8;
+        const toMapY = (wz) => ((wz + 95) / 145) * (h - 12) + 6;
+
+        // Titik entiti interaktif
+        for (const ent of interactiveEntities) {
+            if (ent.type === 'STAGE2_CARD' && gameState.s2Collected[ent.id]) continue;
+            ctx.fillStyle = ent.type === 'NPC' ? '#fbbf24' : '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(toMapX(ent.pos.x), toMapY(ent.pos.z), 2.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Titik pemain
+        const px = toMapX(playerPhysics.x);
+        const py = toMapY(playerPhysics.z);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(px, py, 4.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(px, py, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Label zon semasa
+        const zLabel = document.getElementById('minimap-zone-label');
+        if (playerPhysics.z > 16) zLabel.textContent = 'Kampung';
+        else if (playerPhysics.z > -22) zLabel.textContent = 'Hutan';
+        else if (playerPhysics.z > -61) zLabel.textContent = 'Istana';
+        else zLabel.textContent = 'Singgahsana';
+    }
+
+    function openWorldMap() {
+        const container = document.getElementById('worldmap-zones');
+        container.innerHTML = '';
+
+        const zones = [
+            { stage: 1, name: '1. Kampung Permulaan', icon: '🏡', desc: '5 Objek Asas Isim & Fi‘il', coords: { x: 0, z: 40 } },
+            { stage: 2, name: '2. Hutan Ajaib', icon: '🌲', desc: '5 Kad Hikmah & Peti Penyusun', coords: { x: 0, z: 12 } },
+            { stage: 3, name: '3. Istana Misteri', icon: '🏰', desc: '5 Teka-Teki Detektif Ayat', coords: { x: 0, z: -26 } },
+            { stage: 4, name: '4. Singgahsana Raja', icon: '👑', desc: 'Pertarungan Akhir 10 Soalan', coords: { x: 0, z: -66 } }
+        ];
+
+        zones.forEach((z) => {
+            const unlocked = gameState.unlockedStage >= z.stage;
+            const card = document.createElement('div');
+            card.className = `p-4 rounded-2xl border-2 ${unlocked ? 'bg-amber-50 border-amber-400' : 'bg-slate-100 border-slate-300 opacity-70'}`;
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-1">
+                    <span class="font-extrabold text-slate-900 text-sm sm:text-base">${z.icon} ${z.name}</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full ${unlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                        ${unlocked ? 'Dibuka' : '🔒 Terkunci'}
+                    </span>
+                </div>
+                <p class="text-xs text-slate-600 mb-3">${z.desc}</p>
+            `;
+            if (unlocked) {
+                const tpBtn = document.createElement('button');
+                tpBtn.className = 'btn-quest w-full py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-xs';
+                tpBtn.textContent = 'Gerak Pantas ke Sini 🚀';
+                tpBtn.onclick = () => {
+                    playerPhysics.x = z.coords.x;
+                    playerPhysics.z = z.coords.z;
+                    playerPhysics.y = 0;
+                    closeWorldMap();
+                    showToast(`Tiba di ${z.name}`);
+                };
+                card.appendChild(tpBtn);
+            }
+            container.appendChild(card);
+        });
+
+        document.getElementById('modal-worldmap').classList.remove('hidden');
+    }
+
+    function closeWorldMap() {
+        document.getElementById('modal-worldmap').classList.add('hidden');
+    }
+
+    // =========================================================================
+    // 12. NAVIGASI ANTARA SKRIN & UTILITI MODAL
+    // =========================================================================
+    function isAnyModalOpen() {
+        const ids = [
+            'modal-howto', 'modal-dialogue', 'modal-quiz',
+            'modal-sorter', 'modal-worldmap', 'modal-restart', 'modal-victory'
+        ];
+        return ids.some(id => !document.getElementById(id).classList.contains('hidden'));
+    }
+
+    function toggleHowToPlay(show) {
+        const el = document.getElementById('modal-howto');
+        if (show) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+    }
+
+    function openCharacterSelect() {
+        ensureAudio();
+        document.getElementById('screen-menu').classList.add('hidden');
+        document.getElementById('screen-charselect').classList.remove('hidden');
+        renderHeroSelectionCards();
+        const detected = detectInitialDeviceMode();
+        selectDeviceMode(detected);
+    }
+
+    function backToMenu() {
+        document.getElementById('screen-charselect').classList.add('hidden');
+        document.getElementById('screen-menu').classList.remove('hidden');
+    }
+
+    function renderHeroSelectionCards() {
+        const grid = document.getElementById('hero-grid');
+        grid.innerHTML = '';
+        HERO_OPTIONS.forEach((hero) => {
+            const selected = gameState.heroId === hero.id;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `p-3.5 sm:p-4 rounded-2xl text-left transition border-4 ${selected ? 'border-amber-500 bg-amber-100 shadow-md' : 'border-slate-300 bg-white'}`;
+            btn.innerHTML = `
+                <div class="text-3xl sm:text-4xl mb-1.5">${hero.avatar}</div>
+                <div class="font-extrabold text-slate-900 text-sm sm:text-base">${hero.name}</div>
+                <p class="text-[11px] text-slate-600 mt-1 leading-snug">${hero.desc}</p>
+            `;
+            btn.onclick = () => {
+                gameState.heroId = hero.id;
+                renderHeroSelectionCards();
+                rebuildPlayerAvatar();
+            };
+            grid.appendChild(btn);
+        });
+    }
+
+    function startGameWorld() {
+        ensureAudio();
+        playSound('unlock');
+        gameState.started = true;
+        document.getElementById('screen-charselect').classList.add('hidden');
+        document.getElementById('hud-overlay').classList.remove('hidden');
+
+        rebuildPlayerAvatar();
+        applyDeviceModeHUD();
+        selectCameraMode(gameState.cameraMode);
+        updateAllHUD();
+
+        setTimeout(() => {
+            openNPCDialogue('ustaz');
+        }, 450);
+    }
+
+    function openRestartConfirm() {
+        document.getElementById('modal-restart').classList.remove('hidden');
+    }
+
+    function closeRestartConfirm() {
+        document.getElementById('modal-restart').classList.add('hidden');
+    }
+
+    function confirmRestartGame() {
+        window.location.reload();
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+        const el = document.getElementById('toast-banner');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            el.classList.add('hidden');
+        }, 3200);
+    }
+
+    // =========================================================================
+    // 13. GELUNG ANIMASI UTAMA (WINDOW ONLOAD)
+    // =========================================================================
+    function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(0.05, clock.getDelta());
+        const elapsed = clock.getElapsedTime();
+
+        // Awan bergerak perlahan
+        for (const c of cloudList) {
+            c.mesh.position.x += c.speed * dt;
+            if (c.mesh.position.x > 110) c.mesh.position.x = -110;
+        }
+
+        // Butiran air pancut bergerak
+        for (const fp of fountainParticles) {
+            const t = (elapsed * 0.85 + fp.phase) % 1;
+            const radius = 0.25 + t * 1.65;
+            const height = 1.95 + Math.sin(t * Math.PI) * 0.85 - t * 1.35;
+            fp.mesh.position.set(
+                Math.cos(fp.angle) * radius,
+                Math.max(0.62, height),
+                Math.sin(fp.angle) * radius
+            );
+        }
+
+        // Objek & penanda terapung berputar
+        for (const am of animatedMeshes) {
+            if (!am.mesh.visible) continue;
+            am.mesh.position.y = am.baseY + Math.sin(elapsed * 2.6 + am.baseY) * 0.14;
+            if (am.spin) am.mesh.rotation.y += dt * 1.6;
+        }
+
+        if (gameState.started) {
+            updatePlayerAndCamera(dt);
+            updateProximityInteraction();
+            renderMinimap();
+        } else if (camera) {
+            // Kamera tinjauan sinematik di skrin menu utama
+            camera.position.set(Math.sin(elapsed * 0.18) * 18, 9.5, 48 + Math.cos(elapsed * 0.18) * 8);
+            camera.lookAt(0, 2.2, 26);
+        }
+
+        if (renderer && scene && camera) {
+            renderer.render(scene, camera);
+        }
+    }
+
+    function bootGame() {
+        try {
+            if (typeof THREE === 'undefined') {
+                showToast('Ralat: Pustaka 3D gagal dimuatkan. Sila semak sambungan internet dan muat semula.');
+                return;
+            }
+            initThreeWorld();
+            animate();
+        } catch (err) {
+            console.error('Ralat memulakan dunia 3D:', err);
+            showToast('Ralat 3D dikesan: ' + (err && err.message ? err.message : 'Sila muat semula halaman.'));
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootGame);
+    } else {
+        bootGame();
+    }
+    </script>
+</body>
+</html>

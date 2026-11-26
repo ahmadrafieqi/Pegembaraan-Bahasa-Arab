@@ -1,0 +1,6 @@
+{
+  "name": "Kembara Bahasa Arab: Kerajaan Yang Hilang",
+  "description": "Aplikasi pembelajaran interaktif 3D Bahasa Arab Tahun 4 untuk menguasai Isim (الِاسْمُ) dan Fi'il (الْفِعْلُ) melalui pengembaraan 4 peringkat.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html,
+  body,
+  #root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
+    background-color: #0f172a;
+  }
+}
+
+.arabic-text {
+  font-family: 'Cairo', 'Amiri', serif;
+  direction: rtl;
+  line-height: 1.95;
+  padding-top: 0.08em;
+  padding-bottom: 0.08em;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.arabic-display {
+  font-family: 'Amiri', 'Cairo', serif;
+  direction: rtl;
+  line-height: 2.0;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.btn-quest {
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s ease;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28);
+}
+
+.btn-quest:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.28);
+}
+
+.btn-quest:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.28);
+}
+
+.btn-quest:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.quest-panel {
+  background: rgba(255, 252, 245, 0.97);
+  border: 3px solid #f59e0b;
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Solid translucent surface without backdrop-filter to keep WebGL compositing silky smooth */
+.hud-surface {
+  background: rgba(15, 23, 42, 0.88);
+  border: 2px solid rgba(251, 191, 36, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-pop {
+  animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop,
+  .animate-bounce {
+    animation: none !important;
+  }
+  .btn-quest {
+    transition: none;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fef3c7;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #f59e0b;
+  border-radius: 999px;
+}
