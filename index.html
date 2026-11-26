@@ -48,7 +48,7 @@
         }
         devScript.addEventListener('error', handleRawStaticFallback);
         if (window.location.hostname.endsWith('github.io')) {
-          window.setTimeout(handleRawStaticFallback, 2000);
+          handleRawStaticFallback();
         }
       })();
     </script>
